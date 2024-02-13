@@ -33,10 +33,15 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(Data::new(client.clone())) // MongoDB client
             .service(
-                web::scope("/api").service(
-                    web::resource("auth/register")
-                        .route(web::post().to(handlers::auth::register_user)),
-                ), // Additional API configuration
+                web::scope("/api")
+                    .service(
+                        web::resource("auth/register")
+                            .route(web::post().to(handlers::auth::register_user)),
+                    )
+                    .service(
+                        web::resource("/auth/login")
+                            .route(web::post().to(handlers::auth::login_user)),
+                    ),
             )
     })
     .bind("0.0.0.0:8081")?

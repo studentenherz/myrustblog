@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use components::user_registration::UserRegistration;
+use components::{user_login::LoginForm, user_registration::UserRegistration};
 
 mod components;
 
@@ -10,6 +10,7 @@ fn App() -> Html {
         <div>
             <h1>{ "Hello, Yew!" }</h1>
             <UserRegistration />
+            <LoginForm />
         </div>
     }
 }

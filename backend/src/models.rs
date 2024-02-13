@@ -8,6 +8,12 @@ pub struct UserRegistration {
     pub password: String,
 }
 
+#[derive(Default, Deserialize, Serialize, Clone)]
+pub struct UserLogin {
+    pub username: String,
+    pub password: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     #[serde(rename = "_id")]
