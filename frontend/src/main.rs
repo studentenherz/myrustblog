@@ -1,0 +1,20 @@
+use yew::prelude::*;
+
+use components::user_registration::UserRegistration;
+
+mod components;
+
+#[function_component]
+fn App() -> Html {
+    html! {
+        <div>
+            <h1>{ "Hello, Yew!" }</h1>
+            <UserRegistration />
+        </div>
+    }
+}
+
+fn main() {
+    wasm_logger::init(wasm_logger::Config::default());
+    yew::Renderer::<App>::new().render();
+}
