@@ -23,3 +23,10 @@ pub struct User {
     pub password: String, // This will be hashed
     pub role: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,  // Subject, commonly used to store the user ID
+    pub role: String, // The user's role
+    pub exp: usize,   // Expiration time
+}

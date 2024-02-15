@@ -6,10 +6,9 @@ use mongodb::{
     bson::{doc, Bson},
     Client,
 };
-use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use crate::models::{User, UserLogin as UserLoginForm, UserRegistration};
+use crate::models::{Claims, User, UserLogin as UserLoginForm, UserRegistration};
 
 pub async fn register_user(
     db_client: web::Data<Client>,
@@ -39,13 +38,6 @@ pub async fn register_user(
         Ok(_) => HttpResponse::Ok().body("User created successfully"),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,  // Subject, commonly used to store the user ID
-    role: String, // The user's role
-    exp: usize,   // Expiration time
 }
 
 pub async fn login_user(
