@@ -1,10 +1,18 @@
-use actix_cors::Cors;
-use actix_web::{http::header, middleware::Logger, web, web::Data, App, HttpServer};
-use dotenv::dotenv;
-use mongodb::{options::ClientOptions, Client};
 use std::env;
 
+use actix_cors::Cors;
+use actix_web::{
+    http::header,
+    middleware::Logger,
+    web::{self, Data},
+    App, HttpServer,
+};
+use dotenv::dotenv;
+use middlewares::authorization;
+use mongodb::{options::ClientOptions, Client};
+
 mod handlers;
+mod middlewares;
 mod models;
 
 #[actix_web::main]
@@ -33,16 +41,16 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(Data::new(client.clone())) // MongoDB client
             .service(
-                web::scope("/api")
+                web::scope("/api/auth")
                     .service(
-                        web::resource("auth/register")
+                        web::resource("/register")
                             .route(web::post().to(handlers::auth::register_user)),
                     )
                     .service(
-                        web::resource("/auth/login")
-                            .route(web::post().to(handlers::auth::login_user)),
+                        web::resource("/login").route(web::post().to(handlers::auth::login_user)),
                     ),
             )
+            .service(web::scope("/").wrap(authorization::Authorization))
     })
     .bind("0.0.0.0:8081")?
     .run()

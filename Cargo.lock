@@ -369,6 +369,7 @@ dependencies = [
  "bcrypt",
  "common",
  "dotenv",
+ "futures-util",
  "jsonwebtoken",
  "mongodb",
  "pretty_env_logger",
