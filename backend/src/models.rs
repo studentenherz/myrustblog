@@ -16,8 +16,8 @@ pub struct UserLogin {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    #[serde(rename = "_id")]
-    pub id: ObjectId,
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
     pub username: String,
     pub email: String,
     pub password: String, // This will be hashed

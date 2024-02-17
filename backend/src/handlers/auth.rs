@@ -25,11 +25,12 @@ pub async fn register_user(
     // Create user document & insert it into the database
     match users
         .insert_one(
-            doc! {
-                "username": &user_info.username,
-                "email": &user_info.email,
-                "password": &hashed_password,
-                "role": "Reader", // Default role
+            User {
+                id: None, // to skip this param
+                username: user_info.username.clone(),
+                email: user_info.email.clone(),
+                password: hashed_password.clone(),
+                role: String::from("Reader"),
             },
             None,
         )
@@ -56,7 +57,7 @@ pub async fn login_user(
             if verify(&login_info.password, &user.password).unwrap_or(false) {
                 // Create JWT token
                 let claims = Claims {
-                    sub: user.id.to_string(),
+                    sub: user.email.to_string(),
                     role: user.role,
                     exp: get_expiration(60 * 60 * 24),
                 };
