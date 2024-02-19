@@ -3,9 +3,9 @@ use std::env;
 use actix_cors::Cors;
 use actix_web::{
     http::header,
-    middleware::Logger,
+    middleware::{Logger, NormalizePath, TrailingSlash},
     web::{self, Data},
-    App, HttpServer,
+    App, HttpResponse, HttpServer,
 };
 use dotenv::dotenv;
 use middlewares::authorization;
@@ -30,6 +30,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default()) // Logs every request
+            .wrap(NormalizePath::new(TrailingSlash::MergeOnly))
             .wrap(
                 Cors::default()
                     .allowed_origin("http://127.0.0.1:8080")
@@ -50,7 +51,12 @@ async fn main() -> std::io::Result<()> {
                         web::resource("/login").route(web::post().to(handlers::auth::login_user)),
                     ),
             )
-            .service(web::scope("/").wrap(authorization::Authorization))
+            .service(web::scope("/").wrap(authorization::Authorization).service(
+                web::resource("").route(web::get().to(|| async {
+                    println!("Hey, Im here");
+                    HttpResponse::Ok().body("ok")
+                })),
+            ))
     })
     .bind("0.0.0.0:8081")?
     .run()
