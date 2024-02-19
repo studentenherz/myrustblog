@@ -1,4 +1,7 @@
-use std::future::{ready, Ready};
+use std::{
+    future::{ready, Ready},
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use actix_web::{
     body::EitherBody,
@@ -7,6 +10,9 @@ use actix_web::{
 };
 use actix_web::{http, HttpResponse};
 use futures_util::{future::LocalBoxFuture, FutureExt, TryFutureExt};
+use jsonwebtoken::{decode, DecodingKey, Validation};
+
+use crate::models::Claims;
 
 pub struct Authorization;
 
@@ -46,12 +52,27 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         if let Some(auth_header) = req.headers().get(http::header::AUTHORIZATION) {
             if let Ok(auth_str) = auth_header.to_str() {
-                if auth_str.starts_with("Bearer ") {
-                    return self
-                        .service
-                        .call(req)
-                        .map_ok(ServiceResponse::map_into_left_body)
-                        .boxed_local();
+                if let Some(token) = auth_str.strip_prefix("Bearer ") {
+                    println!("Bearer {}", token);
+
+                    if let Ok(token) = decode::<Claims>(
+                        token,
+                        &DecodingKey::from_secret("secret".as_ref()),
+                        &Validation::default(),
+                    ) {
+                        let now = SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .expect("WTF!?")
+                            .as_secs() as usize;
+
+                        if now < token.claims.exp {
+                            return self
+                                .service
+                                .call(req)
+                                .map_ok(ServiceResponse::map_into_left_body)
+                                .boxed_local();
+                        }
+                    }
                 }
             }
         }
