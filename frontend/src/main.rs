@@ -3,6 +3,7 @@ use yew::prelude::*;
 use components::{user_login::LoginForm, user_registration::UserRegistration};
 
 mod components;
+pub mod services;
 
 #[function_component]
 fn App() -> Html {

@@ -1,12 +1,10 @@
-use reqwest::Client;
-use serde::Serialize;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{wasm_bindgen::JsCast, HtmlInputElement};
 use yew::prelude::*;
 
-use log;
+use crate::services::auth::AuthService;
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default)]
 pub struct UserRegistration {
     username: String,
     email: String,
@@ -84,15 +82,16 @@ impl Component for UserRegistration {
             Msg::Submit => {
                 let form = self.clone();
                 spawn_local(async move {
-                    let client = Client::new();
-                    // Make sure your endpoint and port matches your backend setup
-                    let response = client
-                        .post("http://localhost:8081/api/auth/register")
-                        .json(&form)
-                        .send()
-                        .await;
-
-                    log::info!("{:?}", response);
+                    match AuthService::register(
+                        form.username.as_str(),
+                        form.email.as_str(),
+                        form.password.as_str(),
+                    )
+                    .await
+                    {
+                        Ok(()) => {}
+                        Err(_) => {}
+                    };
                 });
             }
             Msg::Ignore => {}

@@ -1,10 +1,10 @@
-use reqwest::Client;
-use serde::Serialize;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{wasm_bindgen::JsCast, HtmlInputElement};
 use yew::prelude::*;
 
-#[derive(Default, Serialize, Clone)]
+use crate::services::auth::AuthService;
+
+#[derive(Default, Clone)]
 pub struct LoginForm {
     username: String,
     password: String,
@@ -66,26 +66,10 @@ impl Component for LoginForm {
                 let form = self.clone();
 
                 spawn_local(async move {
-                    let client = Client::new();
-                    let response = client
-                        .post("http://localhost:8081/api/auth/login")
-                        .json(&form)
-                        .send()
-                        .await;
-
-                    if let Ok(successful_response) = response {
-                        if successful_response.status().is_success() {
-                            log::info!("Yes!")
-                        } else {
-                            log::error!(
-                                "Error in the request, status = {}",
-                                successful_response.status()
-                            );
-                        }
-                    } else {
-                        // Handle network error
-                        log::error!("Error in the request");
-                    }
+                    match AuthService::login(form.username.as_str(), form.password.as_str()).await {
+                        Ok(()) => {}
+                        Err(_) => {}
+                    };
                 });
             }
             Msg::UpdatePassword(value) => self.password = value,
