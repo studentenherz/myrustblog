@@ -10,6 +10,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::models::{Claims, User, UserLogin as UserLoginForm, UserRegistration};
 
+use common::LoginResponse;
+
 pub async fn register_user(
     db_client: web::Data<Client>,
     user_info: web::Json<UserRegistration>,
@@ -56,10 +58,11 @@ pub async fn login_user(
             // Verify password
             if verify(&login_info.password, &user.password).unwrap_or(false) {
                 // Create JWT token
+                let max_age: u64 = 60 * 60 * 24;
                 let claims = Claims {
                     sub: user.email.to_string(),
                     role: user.role,
-                    exp: get_expiration(60 * 60 * 24),
+                    exp: get_expiration(max_age),
                 };
                 let token = encode(
                     &Header::default(),
@@ -67,7 +70,8 @@ pub async fn login_user(
                     &EncodingKey::from_secret("secret".as_ref()),
                 )
                 .unwrap();
-                return HttpResponse::Ok().json(token); // Send back token to client
+                return HttpResponse::Ok().json(LoginResponse { token, max_age });
+                // Send back token to client
             }
         }
     }

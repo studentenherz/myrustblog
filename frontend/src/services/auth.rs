@@ -1,5 +1,10 @@
 use reqwest::Client;
 use serde::Serialize;
+
+use crate::utils::cookies::{set_cookie_with_attributes, CookieAttributes};
+
+use common::LoginResponse;
+
 pub struct AuthService;
 
 pub enum AuthError {
@@ -33,10 +38,21 @@ impl AuthService {
         if let Ok(response) = result {
             if response.status().is_success() {
                 log::info!("Successfully loged in!");
-                return Ok(());
+                if let Ok(jwt) = response.json::<LoginResponse>().await {
+                    if let Ok(_) = set_cookie_with_attributes(
+                        "_token",
+                        &jwt.token,
+                        CookieAttributes::new()
+                            .max_age(jwt.max_age)
+                            .path("/")
+                            .same_site_strict()
+                            .secure(),
+                    ) {
+                        return Ok(());
+                    }
+                }
             }
 
-            log::error!("Error in the request, status = {}", response.status());
             return Err(AuthError::LoginError);
         }
 
