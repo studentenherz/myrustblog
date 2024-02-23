@@ -128,7 +128,7 @@ pub fn set_cookie_with_attributes(
     Err(())
 }
 
-pub fn get_cookie(key: &str) -> Result<Option<String>, ()> {
+pub fn get_cookie(key: &str) -> Option<String> {
     if let Some(window) = web_sys::window() {
         if let Some(document) = window.document() {
             if let Ok(document) = document.dyn_into::<web_sys::HtmlDocument>() {
@@ -139,15 +139,13 @@ pub fn get_cookie(key: &str) -> Result<Option<String>, ()> {
                     for cookie in cookies {
                         let cookie = cookie.trim_start();
                         if let Some(val) = cookie.strip_prefix(&prefix) {
-                            return Ok(Some(val.to_string()));
+                            return Some(val.to_string());
                         }
                     }
-
-                    return Ok(None);
                 }
             }
         }
     }
 
-    Err(())
+    None
 }

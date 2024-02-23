@@ -1,7 +1,7 @@
-use reqwest::Client;
+use reqwest::{Client, IntoUrl, RequestBuilder};
 use serde::Serialize;
 
-use crate::utils::cookies::{set_cookie_with_attributes, CookieAttributes};
+use crate::utils::cookies::{get_cookie, set_cookie_with_attributes, CookieAttributes};
 
 use common::LoginResponse;
 
@@ -87,5 +87,31 @@ impl AuthService {
         // Handle network error
         log::error!("Error in the request");
         Err(AuthError::NetworkError)
+    }
+
+    pub fn protected_get<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
+        let client = Client::new();
+
+        if let Some(auth_token) = get_cookie("_token") {
+            Ok(client.get(url).header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", auth_token),
+            ))
+        } else {
+            Err(AuthError::LoginError)
+        }
+    }
+
+    pub fn protected_post<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
+        let client = Client::new();
+
+        if let Some(auth_token) = get_cookie("_token") {
+            Ok(client.post(url).header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", auth_token),
+            ))
+        } else {
+            Err(AuthError::LoginError)
+        }
     }
 }
