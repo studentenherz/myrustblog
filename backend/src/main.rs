@@ -52,10 +52,7 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
             .service(web::scope("/").wrap(authorization::Authorization).service(
-                web::resource("").route(web::get().to(|| async {
-                    println!("Hey, Im here");
-                    HttpResponse::Ok().body("ok")
-                })),
+                web::resource("").route(web::get().to(|| async { HttpResponse::Ok().body("ok") })),
             ))
     })
     .bind("0.0.0.0:8081")?

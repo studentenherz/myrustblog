@@ -53,8 +53,6 @@ where
         if let Some(auth_header) = req.headers().get(http::header::AUTHORIZATION) {
             if let Ok(auth_str) = auth_header.to_str() {
                 if let Some(token) = auth_str.strip_prefix("Bearer ") {
-                    println!("Bearer {}", token);
-
                     if let Ok(token) = decode::<Claims>(
                         token,
                         &DecodingKey::from_secret("secret".as_ref()),
