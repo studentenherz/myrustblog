@@ -7,10 +7,11 @@ use actix_web::{
     web::{self, Data},
     App, HttpResponse, HttpServer,
 };
+use database::mongo::MongoDBHandler;
 use dotenv::dotenv;
 use middlewares::authorization;
-use mongodb::{options::ClientOptions, Client};
 
+mod database;
 mod handlers;
 mod middlewares;
 mod models;
@@ -21,11 +22,7 @@ async fn main() -> std::io::Result<()> {
     pretty_env_logger::init(); // Initialize logger
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let client_options = ClientOptions::parse(&database_url)
-        .await
-        .expect("Failed to parse client options");
-    let client =
-        Client::with_options(client_options).expect("Failed to initialize database client");
+    let db_handler = database::mongo::MongoDBHandler::new(&database_url, "rust_blog").await;
 
     HttpServer::new(move || {
         App::new()
@@ -40,15 +37,16 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
-            .app_data(Data::new(client.clone())) // MongoDB client
+            .app_data(Data::new(db_handler.clone())) // MongoDB client
             .service(
                 web::scope("/api/auth")
                     .service(
                         web::resource("/register")
-                            .route(web::post().to(handlers::auth::register_user)),
+                            .route(web::post().to(handlers::auth::register_user::<MongoDBHandler>)),
                     )
                     .service(
-                        web::resource("/login").route(web::post().to(handlers::auth::login_user)),
+                        web::resource("/login")
+                            .route(web::post().to(handlers::auth::login_user::<MongoDBHandler>)),
                     ),
             )
             .service(web::scope("/").wrap(authorization::Authorization).service(
