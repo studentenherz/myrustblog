@@ -13,6 +13,13 @@ pub async fn register_user<T: DBHandler>(
     db_handler: web::Data<T>,
     user_info: web::Json<UserRegistration>,
 ) -> impl Responder {
+    if let Ok(Some(_)) = db_handler.find_user(&user_info.username).await {
+        return HttpResponse::Conflict().body("username");
+    }
+    if let Ok(Some(_)) = db_handler.find_user_by_email(&user_info.email).await {
+        return HttpResponse::Conflict().body("email");
+    }
+
     // Hash the password
     let hashed_password = match hash(&user_info.password, DEFAULT_COST) {
         Ok(hashed) => hashed,

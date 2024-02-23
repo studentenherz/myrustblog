@@ -33,6 +33,16 @@ impl UserDb for MongoDBHandler {
             .await
             .or(Err(()))
     }
+
+    async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, ()> {
+        let collection = self.db_client.collection::<User>("users");
+
+        collection
+            .find_one(doc! {"email": email}, None)
+            .await
+            .or(Err(()))
+    }
+
     async fn insert_user(&self, user: &User) -> Result<(), ()> {
         let collection = self.db_client.collection::<User>("users");
 

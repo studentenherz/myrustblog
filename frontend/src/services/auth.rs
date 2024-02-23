@@ -1,4 +1,4 @@
-use reqwest::{Client, IntoUrl, RequestBuilder};
+use reqwest::{Client, IntoUrl, RequestBuilder, StatusCode};
 use serde::Serialize;
 
 use crate::utils::cookies::{get_cookie, set_cookie_with_attributes, CookieAttributes};
@@ -11,6 +11,7 @@ pub enum AuthError {
     NetworkError,
     LoginError,
     RegistrationError,
+    RegistrationConflict(String),
 }
 
 #[derive(Serialize)]
@@ -75,13 +76,21 @@ impl AuthService {
             .await;
 
         if let Ok(response) = result {
-            if response.status().is_success() {
-                log::info!("Successfully registered!");
-                return Ok(());
-            }
-
-            log::error!("Error in the request, status = {}", response.status());
-            return Err(AuthError::RegistrationError);
+            return match response.status() {
+                status_code if status_code.is_success() => {
+                    log::info!("Successfully registered!");
+                    Ok(())
+                }
+                StatusCode::INTERNAL_SERVER_ERROR => Err(AuthError::RegistrationError),
+                StatusCode::CONFLICT => match response.text().await {
+                    Ok(conflict) => {
+                        log::error!("{} already in use", conflict);
+                        Err(AuthError::RegistrationConflict(conflict))
+                    }
+                    _ => Err(AuthError::RegistrationError),
+                },
+                _ => Err(AuthError::RegistrationError),
+            };
         }
 
         // Handle network error
