@@ -102,7 +102,7 @@ impl AuthService {
         }
     }
 
-    pub fn protected_post<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
+    pub fn _protected_post<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
         let client = Client::new();
 
         if let Some(auth_token) = get_cookie("_token") {

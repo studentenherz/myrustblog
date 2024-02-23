@@ -20,7 +20,7 @@ impl CookieAttributes {
     ///
     /// [Note]: The domain must match the domain of the JavaScript origin. Setting cookies to foreign domains
     /// will be silently ignored.
-    pub fn domain(&mut self, domain: &str) -> &mut Self {
+    pub fn _domain(&mut self, domain: &str) -> &mut Self {
         self.attr.push_str(&format!(";domain={}", domain));
         self
     }
@@ -48,7 +48,7 @@ impl CookieAttributes {
     /// browsing contexts, even when following a regular link.
     /// - [ ] The none value explicitly states no restrictions will be applied. The cookie will be sent in all requests—both
     /// cross-site and same-site.
-    pub fn same_site_lax(&mut self) -> &mut Self {
+    pub fn _same_site_lax(&mut self) -> &mut Self {
         self.attr.push_str(";samesite=lax");
         self
     }
@@ -78,7 +78,7 @@ impl CookieAttributes {
     /// browsing contexts, even when following a regular link.
     /// - [x] The none value explicitly states no restrictions will be applied. The cookie will be sent in all requests—both
     /// cross-site and same-site.
-    pub fn same_site_none(&mut self) -> &mut Self {
+    pub fn _same_site_none(&mut self) -> &mut Self {
         self.attr.push_str(";samesite=none");
         self
     }
@@ -94,7 +94,7 @@ impl CookieAttributes {
     }
 }
 
-pub fn set_cookie(key: &str, value: &str) -> Result<(), ()> {
+pub fn _set_cookie(key: &str, value: &str) -> Result<(), ()> {
     if let Some(window) = web_sys::window() {
         if let Some(document) = window.document() {
             if let Ok(document) = document.dyn_into::<web_sys::HtmlDocument>() {
