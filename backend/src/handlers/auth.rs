@@ -46,29 +46,32 @@ pub async fn login_user<T: DBHandler>(
     db_handler: web::Data<T>,
     login_info: web::Json<UserLoginForm>,
 ) -> impl Responder {
-    // Query database for user
-    if let Ok(Some(user)) = db_handler.find_user(&login_info.username).await {
-        // Verify password
-        if verify(&login_info.password, &user.password).unwrap_or(false) {
-            // Create JWT token
-            let max_age: u64 = 60 * 60 * 24;
-            let claims = Claims {
-                sub: user.email.to_string(),
-                role: user.role,
-                exp: get_expiration(max_age),
-            };
-            let token = encode(
-                &Header::default(),
-                &claims,
-                &EncodingKey::from_secret("secret".as_ref()),
-            )
-            .unwrap();
-            return HttpResponse::Ok().json(LoginResponse { token, max_age });
-            // Send back token to client
-        }
-    }
+    match db_handler.find_user(&login_info.username).await {
+        Ok(Some(user)) => {
+            if verify(&login_info.password, &user.password).unwrap_or(false) {
+                let max_age: u64 = 60 * 60 * 24;
+                let claims = Claims {
+                    sub: user.email.to_string(),
+                    role: user.role,
+                    exp: get_expiration(max_age),
+                };
 
-    HttpResponse::Unauthorized().finish()
+                if let Ok(token) = encode(
+                    &Header::default(),
+                    &claims,
+                    &EncodingKey::from_secret("secret".as_ref()),
+                ) {
+                    HttpResponse::Ok().json(LoginResponse { token, max_age })
+                } else {
+                    HttpResponse::InternalServerError().finish()
+                }
+            } else {
+                HttpResponse::Unauthorized().finish()
+            }
+        }
+        Ok(None) => HttpResponse::Unauthorized().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
 }
 
 fn get_expiration(seconds_from_now: u64) -> usize {
