@@ -133,7 +133,7 @@ pub fn get_cookie(key: &str) -> Option<String> {
         if let Some(document) = window.document() {
             if let Ok(document) = document.dyn_into::<web_sys::HtmlDocument>() {
                 if let Ok(cookie) = document.cookie() {
-                    let cookies: Vec<&str> = cookie.split(";").collect();
+                    let cookies: Vec<&str> = cookie.split(';').collect();
                     let prefix = format!("{}=", key);
 
                     for cookie in cookies {

@@ -40,7 +40,7 @@ impl AuthService {
             if response.status().is_success() {
                 log::info!("Successfully loged in!");
                 if let Ok(jwt) = response.json::<LoginResponse>().await {
-                    if let Ok(_) = set_cookie_with_attributes(
+                    if set_cookie_with_attributes(
                         "_token",
                         &jwt.token,
                         CookieAttributes::new()
@@ -48,7 +48,9 @@ impl AuthService {
                             .path("/")
                             .same_site_strict()
                             .secure(),
-                    ) {
+                    )
+                    .is_ok()
+                    {
                         return Ok(());
                     }
                 }
