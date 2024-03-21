@@ -1,40 +1,28 @@
-use components::{user_login::LoginForm, user_registration::UserRegistration};
-use services::api::Api;
-use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 mod components;
+mod routes;
 mod services;
 mod utils;
 
+use components::{user_login::LoginForm, user_registration::UserRegistration};
+use routes::AppRoute;
+
 #[function_component(App)]
 fn app() -> Html {
-    let onclick = Callback::from(|_| {
-        // Create a local closure that makes the `get_home` call
-        let get_home = async {
-            match Api::get_home().await {
-                Ok(()) => {
-                    log::info!("Successfully fetched home!");
-                    // Perform actions on success, e.g., update state or UI
-                }
-                Err(()) => {
-                    log::error!("Failed to fetch home!");
-                    // Perform actions on failure, e.g., show an error message
-                }
-            }
-        };
-
-        // Spawn the local async task
-        spawn_local(get_home);
-    });
-
     html! {
-        <div>
-            <h1>{ "Hello, Yew!" }</h1>
-            <UserRegistration />
-            <LoginForm />
-            <button {onclick}>{ "Test Get Home" }</button>
-        </div>
+        <BrowserRouter>
+            <Switch<AppRoute> render={switch} />
+        </BrowserRouter>
+    }
+}
+
+fn switch(routes: AppRoute) -> Html {
+    match routes {
+        AppRoute::Login => html! { <LoginForm /> },
+        AppRoute::Register => html! { <UserRegistration /> },
+        AppRoute::Home => html! { <h1>{ "Welcome to the Home Page" }</h1> },
     }
 }
 
