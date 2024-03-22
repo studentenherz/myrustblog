@@ -1,0 +1,7 @@
+You are receiving this e-mail because someone used it
+in the registration for My Rust Blog. If you don't know
+what this is about, please just ignore this e-mail.
+
+To confirm your registration, please use the link bellow.
+
+{link}

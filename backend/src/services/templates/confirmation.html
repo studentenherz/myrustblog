@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmation</title>
+    <style>
+        * {{
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }}
+
+        html, .body {{
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333333;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            text-align: center;
+            position: relative;
+            background: rgb(238,174,202);
+            background: linear-gradient(45deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+            overflow: scroll;
+        }}
+
+        .title {{
+            margin: 50px;
+            font-size: 2.5rem;
+            color: white;
+        }}
+
+        .container {{
+            width: 100%;
+        }}
+
+        .container1 {{
+            display: block;
+            padding: 60px;
+            max-width: 730px;
+            width: 97%;
+            border-radius: 20px;
+            background-color: rgb(255, 255, 255);
+        }}
+
+        a.button {{
+            text-decoration: none;
+            display: block;
+            margin: 40px 0;
+            width: 200px;
+            padding: 15px;
+            background-color: #4CAF50; /* Green background for the button */
+            color: white;
+            border: none;
+            border-radius: 30px;
+        }}
+
+        a.button:hover, button:focus {{
+            cursor: pointer;
+            background-color: #45a049;
+        }}
+
+        p {{
+            display: block;
+            text-align: justify;
+        }}
+
+        .link-text {{
+            margin: 30px;
+            padding: 15px;
+            background-color: #e4e4e4;
+        }}
+
+        @media screen and (min-width: 730px) {{
+            .body {{
+                font-size: 1.1rem;
+            }}
+        }}
+
+    </style>
+</head>
+<body class="body">
+    <h1 class="title">Welcome to My Rust Blog</h1>
+    <table class="container">
+        <tr align="center" style="height: 100%;">
+            <td align="center" class="container1">
+                <div class="container2">
+                    <p>You are receiving this e&#x2011;mail because someone used it in the registration for My Rust Blog. If you don't know what this is about, please just ignore this e&#x2011;mail. To confirm your registration, please click the button below.</p>
+                    <a target="_blank" href="{link}" class="button">Confirm</a>
+                    <p>If the button doesn't work, copy the following link and paste it in your browser.</p>
+                    <div class="link-text">
+                        <pre>{link}</pre>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

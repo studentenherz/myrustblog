@@ -7,14 +7,17 @@ use actix_web::{
     web::{self, Data},
     App, HttpResponse, HttpServer,
 };
-use database::mongo::MongoDBHandler;
-use dotenv::dotenv;
-use middlewares::authorization;
 
 mod database;
 mod handlers;
 mod middlewares;
 mod models;
+mod services;
+
+use database::mongo::MongoDBHandler;
+use dotenv::dotenv;
+use middlewares::authorization;
+use services::email::Emailer;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -23,6 +26,13 @@ async fn main() -> std::io::Result<()> {
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db_handler = database::mongo::MongoDBHandler::new(&database_url, "rust_blog").await;
+
+    let emailer = Emailer::new().expect("Error loading env variables");
+
+    emailer
+        .test_connection()
+        .await
+        .expect("Connection test with SMTP server failed");
 
     HttpServer::new(move || {
         App::new()
