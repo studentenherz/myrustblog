@@ -373,6 +373,8 @@ dependencies = [
  "actix-identity",
  "actix-web",
  "bcrypt",
+ "bson",
+ "chrono",
  "common",
  "dotenv",
  "futures-util",
@@ -380,6 +382,7 @@ dependencies = [
  "lettre",
  "mongodb",
  "pretty_env_logger",
+ "rand",
  "serde",
  "serde_json",
 ]
@@ -518,6 +521,7 @@ dependencies = [
  "ahash",
  "base64 0.13.1",
  "bitvec",
+ "chrono",
  "hex",
  "indexmap",
  "js-sys",
@@ -575,13 +579,16 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.33"
+version = "0.4.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f13690e35a5e4ace198e7beea2895d29f3a9cc55015fcebe6336bd2010af9eb"
+checksum = "8eaf5903dcbc0a39312feb77df2ff4c76387d591b9fc7b04a238dcf8bb62639a"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
+ "serde",
+ "wasm-bindgen",
  "windows-targets 0.52.0",
 ]
 
