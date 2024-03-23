@@ -13,6 +13,7 @@ mod handlers;
 mod middlewares;
 mod models;
 mod services;
+mod utils;
 
 use database::mongo::MongoDBHandler;
 use dotenv::dotenv;
@@ -25,7 +26,9 @@ async fn main() -> std::io::Result<()> {
     pretty_env_logger::init(); // Initialize logger
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db_handler = database::mongo::MongoDBHandler::new(&database_url, "rust_blog").await;
+    let db_handler = database::mongo::MongoDBHandler::new(&database_url, "rust_blog")
+        .await
+        .expect("Error creating database handler");
 
     let emailer = Emailer::new().expect("Error loading env variables");
 
@@ -48,11 +51,16 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600),
             )
             .app_data(Data::new(db_handler.clone())) // MongoDB client
+            .app_data(Data::new(emailer.clone())) //  Emailer service
             .service(
                 web::scope("/api/auth")
                     .service(
                         web::resource("/register")
                             .route(web::post().to(handlers::auth::register_user::<MongoDBHandler>)),
+                    )
+                    .service(
+                        web::resource("/confirm")
+                            .route(web::post().to(handlers::auth::confirm_user::<MongoDBHandler>)),
                     )
                     .service(
                         web::resource("/login")

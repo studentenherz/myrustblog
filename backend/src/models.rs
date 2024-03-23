@@ -10,6 +10,12 @@ pub struct UserRegistration {
     pub username: String,
     pub email: String,
     pub password: String,
+    pub host: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserConfirmation {
+    pub confirmation_token: String,
 }
 
 #[derive(Default, Deserialize, Serialize, Clone)]

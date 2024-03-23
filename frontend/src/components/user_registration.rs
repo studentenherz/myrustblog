@@ -3,13 +3,14 @@ use web_sys::{wasm_bindgen::JsCast, HtmlInputElement};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::{routes::AppRoute, services::auth::AuthService};
+use crate::{routes::AppRoute, services::auth::AuthService, utils::window::get_current_host};
 
 #[derive(Debug, Clone, Default)]
 pub struct UserRegistration {
     username: String,
     email: String,
     password: String,
+    host: String,
 }
 
 pub enum Msg {

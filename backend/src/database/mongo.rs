@@ -99,7 +99,7 @@ impl UnconfirmedUserDb for MongoDBHandler {
             .await
         {
             match user_option {
-                Some(user) => {
+                Some(user) if !user.confirmed => {
                     if self
                         .unconfirmed_user_collection
                         .update_one(
@@ -113,7 +113,7 @@ impl UnconfirmedUserDb for MongoDBHandler {
                         return Ok(Some(user));
                     }
                 }
-                None => return Ok(None),
+                _ => return Ok(None),
             }
         }
 

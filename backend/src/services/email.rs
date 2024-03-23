@@ -7,6 +7,7 @@ use lettre::{
 use std::env;
 use std::error::Error;
 
+#[derive(Clone)]
 pub struct Emailer {
     smtp_client: AsyncSmtpTransport<Tokio1Executor>,
     from_email: String,

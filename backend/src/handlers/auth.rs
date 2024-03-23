@@ -2,21 +2,37 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use actix_web::{web, HttpResponse, Responder};
 use bcrypt::{hash, verify, DEFAULT_COST};
+use chrono::Utc;
 use jsonwebtoken::{encode, EncodingKey, Header};
 
-use crate::database::DBHandler;
-
-use crate::models::{Claims, User, UserLogin as UserLoginForm, UserRegistration};
+use crate::{
+    database::DBHandler,
+    models::{
+        Claims, UnconfirmedUser, UserConfirmation, UserLogin as UserLoginForm, UserRegistration,
+    },
+    services::email::Emailer,
+    utils::generate_random_alphanumeric_str,
+};
 use common::LoginResponse;
 
 pub async fn register_user<T: DBHandler>(
     db_handler: web::Data<T>,
+    emailer: web::Data<Emailer>,
     user_info: web::Json<UserRegistration>,
 ) -> impl Responder {
     if let Ok(Some(_)) = db_handler.find_user(&user_info.username).await {
         return HttpResponse::Conflict().body("username");
     }
     if let Ok(Some(_)) = db_handler.find_user_by_email(&user_info.email).await {
+        return HttpResponse::Conflict().body("email");
+    }
+    if let Ok(Some(_)) = db_handler.find_unconfirmed_user(&user_info.username).await {
+        return HttpResponse::Conflict().body("username");
+    }
+    if let Ok(Some(_)) = db_handler
+        .find_unconfirmed_user_user_by_email(&user_info.email)
+        .await
+    {
         return HttpResponse::Conflict().body("email");
     }
 
@@ -26,20 +42,59 @@ pub async fn register_user<T: DBHandler>(
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
 
+    let confirmation_token = generate_random_alphanumeric_str(32);
+    let host = match &user_info.host {
+        Some(x) => x.clone(),
+        _ => String::from("http://localhost"),
+    };
+
     // Create user document & insert it into the database
-    match db_handler
-        .insert_user(&User {
-            id: None, // to skip this param
+    if db_handler
+        .insert_unconfirmed_user(&UnconfirmedUser {
+            confirmation_token: confirmation_token.clone(),
+            host: host.clone(),
+            created_at: Utc::now(),
+            confirmed: false,
             username: user_info.username.clone(),
             email: user_info.email.clone(),
             password: hashed_password.clone(),
             role: String::from("Reader"),
         })
         .await
+        .is_ok()
     {
-        Ok(_) => HttpResponse::Ok().body("User created successfully"),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        let link = format!("{}/confirm/{}", host, confirmation_token);
+        if emailer
+            .send_confirmation_email(&user_info.email, &link)
+            .await
+            .is_ok()
+        {
+            return HttpResponse::Ok().body("User created successfully");
+        }
     }
+
+    HttpResponse::InternalServerError().finish()
+}
+
+pub async fn confirm_user<T: DBHandler>(
+    db_handler: web::Data<T>,
+    user_confirmation: web::Json<UserConfirmation>,
+) -> impl Responder {
+    // Create user document & insert it into the database
+    if let Ok(user_option) = db_handler
+        .confirm_user(&user_confirmation.confirmation_token)
+        .await
+    {
+        match user_option {
+            Some(user) => {
+                if db_handler.insert_user(&user.into()).await.is_ok() {
+                    return HttpResponse::Ok().body("Confirmation successful!");
+                }
+            }
+            None => return HttpResponse::NotFound().finish(),
+        }
+    }
+    HttpResponse::InternalServerError().finish()
 }
 
 pub async fn login_user<T: DBHandler>(

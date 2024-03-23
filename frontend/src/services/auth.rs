@@ -1,7 +1,10 @@
 use reqwest::{Client, IntoUrl, RequestBuilder, StatusCode};
 use serde::Serialize;
 
-use crate::utils::cookies::{get_cookie, set_cookie_with_attributes, CookieAttributes};
+use crate::utils::{
+    cookies::{get_cookie, set_cookie_with_attributes, CookieAttributes},
+    window::get_current_host,
+};
 
 use common::LoginResponse;
 
@@ -11,6 +14,7 @@ pub enum AuthError {
     NetworkError,
     LoginError,
     RegistrationError,
+    ConfirmationError,
     RegistrationConflict(String),
 }
 
@@ -25,6 +29,12 @@ struct RegistrationForm<'a> {
     username: &'a str,
     email: &'a str,
     password: &'a str,
+    host: Option<String>,
+}
+
+#[derive(Serialize)]
+struct UserConfirmation<'a> {
+    confirmation_token: &'a str,
 }
 
 impl AuthService {
@@ -67,12 +77,15 @@ impl AuthService {
     pub async fn register(username: &str, email: &str, password: &str) -> Result<(), AuthError> {
         let client = Client::new();
 
+        let host = get_current_host();
+
         let result = client
             .post("http://localhost:8081/api/auth/register")
             .json(&RegistrationForm {
                 username,
                 email,
                 password,
+                host,
             })
             .send()
             .await;
@@ -92,6 +105,34 @@ impl AuthService {
                     _ => Err(AuthError::RegistrationError),
                 },
                 _ => Err(AuthError::RegistrationError),
+            };
+        }
+
+        // Handle network error
+        log::error!("Error in the request");
+        Err(AuthError::NetworkError)
+    }
+
+    pub async fn confirm(token: &str) -> Result<(), AuthError> {
+        let client = Client::new();
+
+        let result = client
+            .post("http://localhost:8081/api/auth/confirm")
+            .json(&UserConfirmation {
+                confirmation_token: token,
+            })
+            .send()
+            .await;
+
+        if let Ok(response) = result {
+            return match response.status() {
+                status_code if status_code.is_success() => {
+                    log::info!("User confirmation successful!");
+                    Ok(())
+                }
+                StatusCode::INTERNAL_SERVER_ERROR => Err(AuthError::ConfirmationError),
+                StatusCode::NOT_FOUND => Err(AuthError::ConfirmationError),
+                _ => Err(AuthError::ConfirmationError),
             };
         }
 
