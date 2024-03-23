@@ -13,26 +13,37 @@ use crate::{
     services::email::Emailer,
     utils::generate_random_alphanumeric_str,
 };
-use common::LoginResponse;
+use common::{utils::*, LoginResponse};
 
 pub async fn register_user<T: DBHandler>(
     db_handler: web::Data<T>,
     emailer: web::Data<Emailer>,
     user_info: web::Json<UserRegistration>,
 ) -> impl Responder {
+    if !is_valid_email(&user_info.email) {
+        return HttpResponse::BadRequest().body("email");
+    }
+
+    let email = normalize_email(&user_info.email);
+
+    if !is_valid_username(&user_info.username) {
+        return HttpResponse::BadRequest().body("username");
+    }
+
+    if !is_valid_password(&user_info.password) {
+        return HttpResponse::BadRequest().body("password");
+    }
+
     if let Ok(Some(_)) = db_handler.find_user(&user_info.username).await {
         return HttpResponse::Conflict().body("username");
     }
-    if let Ok(Some(_)) = db_handler.find_user_by_email(&user_info.email).await {
+    if let Ok(Some(_)) = db_handler.find_user_by_email(&email).await {
         return HttpResponse::Conflict().body("email");
     }
     if let Ok(Some(_)) = db_handler.find_unconfirmed_user(&user_info.username).await {
         return HttpResponse::Conflict().body("username");
     }
-    if let Ok(Some(_)) = db_handler
-        .find_unconfirmed_user_user_by_email(&user_info.email)
-        .await
-    {
+    if let Ok(Some(_)) = db_handler.find_unconfirmed_user_user_by_email(&email).await {
         return HttpResponse::Conflict().body("email");
     }
 
@@ -56,7 +67,7 @@ pub async fn register_user<T: DBHandler>(
             created_at: Utc::now(),
             confirmed: false,
             username: user_info.username.clone(),
-            email: user_info.email.clone(),
+            email: email.clone(),
             password: hashed_password.clone(),
             role: String::from("Reader"),
         })
@@ -64,11 +75,7 @@ pub async fn register_user<T: DBHandler>(
         .is_ok()
     {
         let link = format!("{}/confirm/{}", host, confirmation_token);
-        if emailer
-            .send_confirmation_email(&user_info.email, &link)
-            .await
-            .is_ok()
-        {
+        if emailer.send_confirmation_email(&email, &link).await.is_ok() {
             return HttpResponse::Ok().body("User created successfully");
         }
     }

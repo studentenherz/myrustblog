@@ -3,14 +3,21 @@ use web_sys::{wasm_bindgen::JsCast, HtmlInputElement};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::{routes::AppRoute, services::auth::AuthService, utils::window::get_current_host};
+use crate::{
+    components::service_notifications::{NotificationLevel, ServiceNotification},
+    routes::AppRoute,
+    services::auth::AuthService,
+};
+
+use common::utils::{is_valid_email, is_valid_password, is_valid_username};
 
 #[derive(Debug, Clone, Default)]
 pub struct UserRegistration {
     username: String,
     email: String,
     password: String,
-    host: String,
+    service_notification_text: String,
+    service_notification_level: NotificationLevel,
 }
 
 pub enum Msg {
@@ -19,6 +26,8 @@ pub enum Msg {
     UpdatePassword(String),
     Submit,
     Ignore,
+    Success(String),
+    Error(String),
 }
 
 impl Component for UserRegistration {
@@ -30,9 +39,18 @@ impl Component for UserRegistration {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let valid_username = is_valid_username(&self.username);
+        let valid_email = is_valid_email(&self.email);
+        let valid_password = is_valid_password(&self.password);
+        let enabled = valid_username && valid_email && valid_password;
+
         html! {
             <div class="register">
                 <h2> {"User registration"} </h2>
+                if !self.service_notification_text.is_empty() {
+                    < ServiceNotification message={self.service_notification_text.clone()} level={self.service_notification_level} />
+                }
+
                 <form onsubmit={ctx.link().callback(|e: yew::events::SubmitEvent| {
                     e.prevent_default(); // Prevent the default form submission
                     Msg::Submit
@@ -43,7 +61,7 @@ impl Component for UserRegistration {
                             type="text"
                             placeholder="Username"
                             value={self.username.clone()}
-                            onchange={ctx.link().callback(|e: Event| {
+                            oninput={ctx.link().callback(|e: InputEvent| {
                                 if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlInputElement>().ok()) {
                                     Msg::UpdateUsername(input.value())
                                 } else {
@@ -58,7 +76,7 @@ impl Component for UserRegistration {
                             type="email"
                             placeholder="Email"
                             value={self.email.clone()}
-                            onchange={ctx.link().callback(|e: Event| {
+                            oninput={ctx.link().callback(|e: InputEvent| {
                                 if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlInputElement>().ok()) {
                                     Msg::UpdateEmail(input.value())
                                 } else {
@@ -73,7 +91,7 @@ impl Component for UserRegistration {
                             type="password"
                             placeholder="Password"
                             value={self.password.clone()}
-                            onchange={ctx.link().callback(|e: Event| {
+                            oninput={ctx.link().callback(|e: InputEvent| {
                                 if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlInputElement>().ok()) {
                                     Msg::UpdatePassword(input.value())
                                 } else {
@@ -82,7 +100,7 @@ impl Component for UserRegistration {
                             })}
                         />
                     </div>
-                    <button>{"Register"}</button>
+                    <button disabled={!enabled}>{"Register"}</button>
                 </form>
 
                 <Link<AppRoute> to={AppRoute::Login} classes="bottom"> {"Already have an account? Login"} </Link<AppRoute>>
@@ -90,13 +108,20 @@ impl Component for UserRegistration {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::UpdateUsername(value) => self.username = value,
             Msg::UpdateEmail(value) => self.email = value,
             Msg::UpdatePassword(value) => self.password = value,
             Msg::Submit => {
                 let form = self.clone();
+                let success_callback = ctx.link().callback(|_| {
+                    Msg::Success("An e-mail was sent to you for confirmation".to_string())
+                });
+                let error_callback = ctx.link().callback(|_| {
+                    Msg::Error("Some error occurred during registration".to_string())
+                });
+
                 spawn_local(async move {
                     match AuthService::register(
                         form.username.as_str(),
@@ -105,10 +130,22 @@ impl Component for UserRegistration {
                     )
                     .await
                     {
-                        Ok(()) => {}
-                        Err(_) => {}
+                        Ok(()) => {
+                            success_callback.emit(());
+                        }
+                        Err(_) => {
+                            error_callback.emit(());
+                        }
                     };
                 });
+            }
+            Msg::Success(text) => {
+                self.service_notification_text = text;
+                self.service_notification_level = NotificationLevel::Info;
+            }
+            Msg::Error(text) => {
+                self.service_notification_text = text;
+                self.service_notification_level = NotificationLevel::Error;
             }
             Msg::Ignore => {}
         }
