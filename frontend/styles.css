@@ -1,3 +1,7 @@
+* {
+    --info-background: #d1eff7;
+}
+
 body {
     height: 100vh;
     margin: 0;
@@ -69,7 +73,11 @@ body {
         font-size: 16px;
     }
 
-    button:hover, button:focus {
+    button:disabled {
+        opacity: 0.7;
+    }
+
+    button:not([disabled]):hover, button:focus {
         background-color: #45a049;
     }
 
@@ -90,6 +98,29 @@ body {
         justify-self: flex-end;
         margin-top: 30px;
         margin-bottom: 0;
+    }
+
+    .service-notification {
+        width: fit-content;
+        padding: 15px;
+        border-radius: 10px;
+        margin: 10px;
+
+        &.info {
+            background-color: var(--info-background);
+        }
+
+        &.success {
+            background-color: #94e1a6;
+        }
+
+        &.warning {
+            background-color: #fdf5b7;
+        }
+
+        &.error {
+            background-color: #ffcccb;
+        }
     }
 }
 
