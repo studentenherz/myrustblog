@@ -6,6 +6,8 @@ use crate::utils::{
     window::get_current_host,
 };
 
+use crate::api_url;
+
 use common::LoginResponse;
 
 pub struct AuthService;
@@ -41,7 +43,7 @@ impl AuthService {
     pub async fn login(username: &str, password: &str) -> Result<(), AuthError> {
         let client = Client::new();
         let result = client
-            .post("http://localhost:8081/api/auth/login")
+            .post(api_url!("/auth/login"))
             .json(&LoginForm { username, password })
             .send()
             .await;
@@ -80,7 +82,7 @@ impl AuthService {
         let host = get_current_host();
 
         let result = client
-            .post("http://localhost:8081/api/auth/register")
+            .post(api_url!("/auth/register"))
             .json(&RegistrationForm {
                 username,
                 email,
@@ -117,7 +119,7 @@ impl AuthService {
         let client = Client::new();
 
         let result = client
-            .post("http://localhost:8081/api/auth/confirm")
+            .post(api_url!("/auth/confirm"))
             .json(&UserConfirmation {
                 confirmation_token: token,
             })
