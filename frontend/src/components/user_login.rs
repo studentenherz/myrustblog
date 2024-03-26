@@ -1,12 +1,13 @@
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{wasm_bindgen::JsCast, HtmlInputElement};
 use yew::prelude::*;
-use yew_router::prelude::*;
+use yew_router::{history::History, prelude::*};
 
 use crate::{
     components::service_notifications::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
     services::auth::{AuthError, AuthService},
+    utils::is_loged_in,
 };
 use common::utils::{is_valid_password, is_valid_username};
 
@@ -37,6 +38,12 @@ impl Component for LoginForm {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        if is_loged_in() {
+            return html! {
+                <Redirect<AppRoute> to={AppRoute::Home}/>
+            };
+        }
+
         let valid_username = is_valid_username(&self.username);
         let valid_password = is_valid_password(&self.password);
         let enabled = valid_username && valid_password && !self.disable_submit;
@@ -130,6 +137,9 @@ impl Component for LoginForm {
             Msg::Success(text) => {
                 self.service_notification_text = text;
                 self.service_notification_level = NotificationLevel::Success;
+
+                let history = yew_router::history::BrowserHistory::new();
+                history.replace(AppRoute::Home.to_path());
             }
             Msg::Error(text) => {
                 self.disable_submit = false;

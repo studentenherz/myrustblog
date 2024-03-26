@@ -7,6 +7,7 @@ use crate::{
     components::service_notifications::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
     services::auth::{AuthError, AuthService},
+    utils::is_loged_in,
 };
 
 use common::utils::{is_valid_email, is_valid_password, is_valid_username};
@@ -40,6 +41,12 @@ impl Component for UserRegistration {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        if is_loged_in() {
+            return html! {
+                <Redirect<AppRoute> to={AppRoute::Home}/>
+            };
+        }
+
         let valid_username = is_valid_username(&self.username);
         let valid_email = is_valid_email(&self.email);
         let valid_password = is_valid_password(&self.password);

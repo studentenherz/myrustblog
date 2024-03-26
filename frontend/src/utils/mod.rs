@@ -1,3 +1,5 @@
 pub mod cookies;
 pub mod macros;
-pub mod window;
+pub mod misc;
+
+pub use misc::*;
