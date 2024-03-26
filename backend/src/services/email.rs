@@ -1,10 +1,8 @@
-use dotenv::dotenv;
 use lettre::{
     message::{header::ContentType, MultiPart, SinglePart},
     transport::smtp::authentication::Credentials,
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
 };
-use std::env;
 use std::error::Error;
 
 #[derive(Clone)]
@@ -17,17 +15,16 @@ pub struct Emailer {
 pub struct SmtpConnectionError;
 
 impl Emailer {
-    pub fn new() -> Result<Self, Box<dyn Error>> {
-        dotenv().ok(); // Load environment variables from .env file if present
+    pub fn new(
+        smtp_server: &str,
+        smtp_username: &str,
+        smtp_password: &str,
+    ) -> Result<Self, Box<dyn Error>> {
+        let from_email = String::from(smtp_username);
 
-        let smtp_server = env::var("SMTP_SERVER")?;
-        let smtp_username = env::var("SMTP_USERNAME")?;
-        let smtp_password = env::var("SMTP_PASSWORD")?;
-        let from_email = smtp_username.clone();
+        let creds = Credentials::new(smtp_username.to_string(), smtp_password.to_string());
 
-        let creds = Credentials::new(smtp_username, smtp_password);
-
-        let smtp_client = AsyncSmtpTransport::<Tokio1Executor>::relay(&smtp_server)?
+        let smtp_client = AsyncSmtpTransport::<Tokio1Executor>::relay(smtp_server)?
             .credentials(creds)
             .build();
 

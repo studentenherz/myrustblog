@@ -12,6 +12,7 @@ use crate::{
     },
     services::email::Emailer,
     utils::generate_random_alphanumeric_str,
+    Config,
 };
 use common::{utils::*, LoginResponse};
 
@@ -106,6 +107,7 @@ pub async fn confirm_user<T: DBHandler>(
 
 pub async fn login_user<T: DBHandler>(
     db_handler: web::Data<T>,
+    config: web::Data<Config>,
     login_info: web::Json<UserLoginForm>,
 ) -> impl Responder {
     match db_handler.find_user(&login_info.username).await {
@@ -121,7 +123,7 @@ pub async fn login_user<T: DBHandler>(
                 if let Ok(token) = encode(
                     &Header::default(),
                     &claims,
-                    &EncodingKey::from_secret("secret".as_ref()),
+                    &EncodingKey::from_secret(config.JWT_SECRET.as_ref()),
                 ) {
                     HttpResponse::Ok().json(LoginResponse { token, max_age })
                 } else {

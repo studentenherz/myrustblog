@@ -14,7 +14,17 @@ use jsonwebtoken::{decode, DecodingKey, Validation};
 
 use crate::models::Claims;
 
-pub struct Authorization;
+pub struct Authorization {
+    jwt_secret: String,
+}
+
+impl Authorization {
+    pub fn new(jwt_secret: &str) -> Self {
+        Self {
+            jwt_secret: jwt_secret.to_string(),
+        }
+    }
+}
 
 impl<S, B> Transform<S, ServiceRequest> for Authorization
 where
@@ -29,12 +39,16 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(AuthorizationMiddleware { service }))
+        ready(Ok(AuthorizationMiddleware {
+            service,
+            jwt_secret: self.jwt_secret.clone(),
+        }))
     }
 }
 
 pub struct AuthorizationMiddleware<S> {
     service: S,
+    jwt_secret: String,
 }
 
 impl<S, B> Service<ServiceRequest> for AuthorizationMiddleware<S>
@@ -55,7 +69,7 @@ where
                 if let Some(token) = auth_str.strip_prefix("Bearer ") {
                     if let Ok(token) = decode::<Claims>(
                         token,
-                        &DecodingKey::from_secret("secret".as_ref()),
+                        &DecodingKey::from_secret(self.jwt_secret.as_ref()),
                         &Validation::default(),
                     ) {
                         let now = SystemTime::now()

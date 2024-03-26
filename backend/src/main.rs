@@ -1,5 +1,3 @@
-use std::env;
-
 use actix_cors::Cors;
 use actix_web::{
     http::header,
@@ -20,17 +18,33 @@ use dotenv::dotenv;
 use middlewares::authorization;
 use services::email::Emailer;
 
+create_env_struct! {
+    Config {
+        JWT_SECRET,
+        DATABASE_URL,
+        SMTP_SERVER,
+        SMTP_USERNAME,
+        SMTP_PASSWORD
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok(); // Load environment variables from .env file
     pretty_env_logger::init(); // Initialize logger
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db_handler = database::mongo::MongoDBHandler::new(&database_url, "rust_blog")
+    let config = Config::new();
+
+    let db_handler = database::mongo::MongoDBHandler::new(&config.DATABASE_URL, "rust_blog")
         .await
         .expect("Error creating database handler");
 
-    let emailer = Emailer::new().expect("Error loading env variables");
+    let emailer = Emailer::new(
+        &config.SMTP_SERVER,
+        &config.SMTP_USERNAME,
+        &config.SMTP_PASSWORD,
+    )
+    .expect("Error loading env variables");
 
     emailer
         .test_connection()
@@ -51,7 +65,8 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600),
             )
             .app_data(Data::new(db_handler.clone())) // MongoDB client
-            .app_data(Data::new(emailer.clone())) //  Emailer service
+            .app_data(Data::new(emailer.clone())) // Emailer service
+            .app_data(Data::new(config.clone())) // Config env variables
             .service(
                 web::scope("/api/auth")
                     .service(
@@ -67,9 +82,14 @@ async fn main() -> std::io::Result<()> {
                             .route(web::post().to(handlers::auth::login_user::<MongoDBHandler>)),
                     ),
             )
-            .service(web::scope("/").wrap(authorization::Authorization).service(
-                web::resource("").route(web::get().to(|| async { HttpResponse::Ok().body("ok") })),
-            ))
+            .service(
+                web::scope("/")
+                    .wrap(authorization::Authorization::new(&config.JWT_SECRET))
+                    .service(
+                        web::resource("")
+                            .route(web::get().to(|| async { HttpResponse::Ok().body("ok") })),
+                    ),
+            )
     })
     .bind("0.0.0.0:8081")?
     .run()
