@@ -6,7 +6,7 @@ use yew_router::prelude::*;
 use crate::{
     components::service_notifications::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
-    services::auth::AuthService,
+    services::auth::{AuthError, AuthService},
 };
 
 use common::utils::{is_valid_email, is_valid_password, is_valid_username};
@@ -18,6 +18,7 @@ pub struct UserRegistration {
     password: String,
     service_notification_text: String,
     service_notification_level: NotificationLevel,
+    disable_submit: bool,
 }
 
 pub enum Msg {
@@ -42,7 +43,7 @@ impl Component for UserRegistration {
         let valid_username = is_valid_username(&self.username);
         let valid_email = is_valid_email(&self.email);
         let valid_password = is_valid_password(&self.password);
-        let enabled = valid_username && valid_email && valid_password;
+        let enabled = valid_username && valid_email && valid_password && !self.disable_submit;
 
         html! {
             <div class="register">
@@ -114,12 +115,22 @@ impl Component for UserRegistration {
             Msg::UpdateEmail(value) => self.email = value,
             Msg::UpdatePassword(value) => self.password = value,
             Msg::Submit => {
+                self.service_notification_text.clear();
+                self.disable_submit = true;
                 let form = self.clone();
                 let success_callback = ctx.link().callback(|_| {
                     Msg::Success("An e-mail was sent to you for confirmation".to_string())
                 });
-                let error_callback = ctx.link().callback(|_| {
-                    Msg::Error("Some error occurred during registration".to_string())
+                let error_callback = ctx.link().callback(|err: AuthError| {
+                    Msg::Error(format!(
+                        "Error while trying to register, {}",
+                        match err {
+                            AuthError::RegistrationConflict(field) => {
+                                format!("there is already one account with the same {field}")
+                            }
+                            _ => "please try again later".to_string(),
+                        },
+                    ))
                 });
 
                 spawn_local(async move {
@@ -133,8 +144,8 @@ impl Component for UserRegistration {
                         Ok(()) => {
                             success_callback.emit(());
                         }
-                        Err(_) => {
-                            error_callback.emit(());
+                        Err(err) => {
+                            error_callback.emit(err);
                         }
                     };
                 });
@@ -144,6 +155,7 @@ impl Component for UserRegistration {
                 self.service_notification_level = NotificationLevel::Info;
             }
             Msg::Error(text) => {
+                self.disable_submit = false;
                 self.service_notification_text = text;
                 self.service_notification_level = NotificationLevel::Error;
             }

@@ -6,7 +6,7 @@ use yew_router::prelude::*;
 use crate::{
     components::service_notifications::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
-    services::auth::AuthService,
+    services::auth::{AuthError, AuthService},
 };
 use common::utils::{is_valid_password, is_valid_username};
 
@@ -16,6 +16,7 @@ pub struct LoginForm {
     password: String,
     service_notification_text: String,
     service_notification_level: NotificationLevel,
+    disable_submit: bool,
 }
 
 pub enum Msg {
@@ -38,7 +39,7 @@ impl Component for LoginForm {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let valid_username = is_valid_username(&self.username);
         let valid_password = is_valid_password(&self.password);
-        let enabled = valid_username && valid_password;
+        let enabled = valid_username && valid_password && !self.disable_submit;
 
         html! {
             <div class="login">
@@ -94,22 +95,32 @@ impl Component for LoginForm {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Submit => {
+                self.service_notification_text.clear();
+                self.disable_submit = true;
+
                 let form = self.clone();
                 let success_text = format!("Welcome back, {}!", self.username);
                 let success_callback = ctx
                     .link()
                     .callback(move |_| Msg::Success(success_text.clone()));
-                let error_callback = ctx
-                    .link()
-                    .callback(|_| Msg::Error("Error while login in".to_string()));
+                let error_callback = ctx.link().callback(|err: AuthError| {
+                    Msg::Error(format!(
+                        "Error login in, {}",
+                        match err {
+                            AuthError::LoginError(err_str) => err_str,
+                            AuthError::NetworkError => "can't reach server".to_string(),
+                            _ => "something went wrong".to_string(),
+                        }
+                    ))
+                });
 
                 spawn_local(async move {
                     match AuthService::login(form.username.as_str(), form.password.as_str()).await {
                         Ok(()) => {
                             success_callback.emit(());
                         }
-                        Err(_) => {
-                            error_callback.emit(());
+                        Err(err) => {
+                            error_callback.emit(err);
                         }
                     };
                 });
@@ -121,6 +132,7 @@ impl Component for LoginForm {
                 self.service_notification_level = NotificationLevel::Success;
             }
             Msg::Error(text) => {
+                self.disable_submit = false;
                 self.service_notification_text = text;
                 self.service_notification_level = NotificationLevel::Error;
             }

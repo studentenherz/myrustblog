@@ -3,7 +3,7 @@ use serde::Serialize;
 
 use crate::utils::{
     cookies::{get_cookie, set_cookie_with_attributes, CookieAttributes},
-    window::get_current_host,
+    get_current_host,
 };
 
 use crate::api_url;
@@ -14,7 +14,8 @@ pub struct AuthService;
 
 pub enum AuthError {
     NetworkError,
-    LoginError,
+    AuthenticationError,
+    LoginError(String),
     RegistrationError,
     ConfirmationError,
     RegistrationConflict(String),
@@ -49,26 +50,34 @@ impl AuthService {
             .await;
 
         if let Ok(response) = result {
-            if response.status().is_success() {
-                log::info!("Successfully loged in!");
-                if let Ok(jwt) = response.json::<LoginResponse>().await {
-                    if set_cookie_with_attributes(
-                        "_token",
-                        &jwt.token,
-                        CookieAttributes::new()
-                            .max_age(jwt.max_age)
-                            .path("/")
-                            .same_site_strict()
-                            .secure(),
-                    )
-                    .is_ok()
-                    {
-                        return Ok(());
+            match response.status().as_u16() {
+                200..=299 => {
+                    if let Ok(jwt) = response.json::<LoginResponse>().await {
+                        if set_cookie_with_attributes(
+                            "_token",
+                            &jwt.token,
+                            CookieAttributes::new()
+                                .max_age(jwt.max_age)
+                                .path("/")
+                                .same_site_strict()
+                                .secure(),
+                        )
+                        .is_ok()
+                        {
+                            log::info!("Successfully loged in!");
+                            return Ok(());
+                        }
                     }
                 }
+                400..=499 => {
+                    return Err(AuthError::LoginError(
+                        "Incorrect username and password combination".to_string(),
+                    ));
+                }
+                _ => {
+                    return Err(AuthError::LoginError("Server error".to_string()));
+                }
             }
-
-            return Err(AuthError::LoginError);
         }
 
         // Handle network error
@@ -152,7 +161,7 @@ impl AuthService {
                 format!("Bearer {}", auth_token),
             ))
         } else {
-            Err(AuthError::LoginError)
+            Err(AuthError::AuthenticationError)
         }
     }
 
@@ -165,7 +174,7 @@ impl AuthService {
                 format!("Bearer {}", auth_token),
             ))
         } else {
-            Err(AuthError::LoginError)
+            Err(AuthError::AuthenticationError)
         }
     }
 }
