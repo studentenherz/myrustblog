@@ -6,9 +6,7 @@ mod routes;
 mod services;
 mod utils;
 
-use components::{
-    user_confirmation::UserConfirmation, user_login::LoginForm, user_registration::UserRegistration,
-};
+use components::{LoginForm, UserConfirmation, UserRegistration};
 use routes::AppRoute;
 
 #[function_component(App)]

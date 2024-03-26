@@ -1,4 +1,9 @@
-pub mod service_notifications;
-pub mod user_confirmation;
-pub mod user_login;
-pub mod user_registration;
+mod service_notifications;
+mod user_confirmation;
+mod user_login;
+mod user_registration;
+
+pub use service_notifications::*;
+pub use user_confirmation::UserConfirmation;
+pub use user_login::LoginForm;
+pub use user_registration::UserRegistration;

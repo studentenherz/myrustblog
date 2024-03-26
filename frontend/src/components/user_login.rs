@@ -4,7 +4,7 @@ use yew::prelude::*;
 use yew_router::{history::History, prelude::*};
 
 use crate::{
-    components::service_notifications::{NotificationLevel, ServiceNotification},
+    components::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
     services::auth::{AuthError, AuthService},
     utils::is_loged_in,
