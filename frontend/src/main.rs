@@ -6,7 +6,7 @@ mod routes;
 mod services;
 mod utils;
 
-use components::{LoginForm, UserConfirmation, UserRegistration};
+use components::{Home, LoginForm, UserConfirmation, UserRegistration};
 use routes::AppRoute;
 
 #[function_component(App)]
@@ -23,7 +23,7 @@ fn switch(routes: AppRoute) -> Html {
         AppRoute::Login => html! { <LoginForm /> },
         AppRoute::Register => html! { <UserRegistration /> },
         AppRoute::Confirm { token } => html! { <UserConfirmation token={token} /> },
-        AppRoute::Home => html! { <h1>{ "Welcome to the Home Page" }</h1> },
+        AppRoute::Home => html! {<Home />},
     }
 }
 

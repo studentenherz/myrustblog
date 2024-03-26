@@ -125,7 +125,11 @@ pub async fn login_user<T: DBHandler>(
                     &claims,
                     &EncodingKey::from_secret(config.JWT_SECRET.as_ref()),
                 ) {
-                    HttpResponse::Ok().json(LoginResponse { token, max_age })
+                    HttpResponse::Ok().json(LoginResponse {
+                        token,
+                        username: login_info.username.clone(),
+                        max_age,
+                    })
                 } else {
                     HttpResponse::InternalServerError().finish()
                 }

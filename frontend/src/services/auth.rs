@@ -52,17 +52,27 @@ impl AuthService {
         if let Ok(response) = result {
             match response.status().as_u16() {
                 200..=299 => {
-                    if let Ok(jwt) = response.json::<LoginResponse>().await {
+                    if let Ok(res) = response.json::<LoginResponse>().await {
                         if set_cookie_with_attributes(
                             "_token",
-                            &jwt.token,
+                            &res.token,
                             CookieAttributes::new()
-                                .max_age(jwt.max_age)
+                                .max_age(res.max_age)
                                 .path("/")
                                 .same_site_strict()
                                 .secure(),
                         )
                         .is_ok()
+                            && set_cookie_with_attributes(
+                                "_username",
+                                &res.username,
+                                CookieAttributes::new()
+                                    .max_age(res.max_age)
+                                    .path("/")
+                                    .same_site_strict()
+                                    .secure(),
+                            )
+                            .is_ok()
                         {
                             log::info!("Successfully loged in!");
                             return Ok(());
