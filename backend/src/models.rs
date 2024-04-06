@@ -65,3 +65,15 @@ pub struct Claims {
     pub role: String, // The user's role
     pub exp: usize,   // Expiration time
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Post {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub object_id: Option<ObjectId>,
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub author: String,
+    #[serde(with = "chrono_datetime_as_bson_datetime")]
+    pub published_at: DateTime<Utc>,
+}

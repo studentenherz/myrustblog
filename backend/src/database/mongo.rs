@@ -7,16 +7,18 @@ use mongodb::{
 };
 
 use super::{
+    post::PostDb,
     user::{UnconfirmedUserDb, UserDb},
     DBHandler,
 };
-use crate::models::{UnconfirmedUser, User};
+use crate::models::{Post, UnconfirmedUser, User};
 
 #[derive(Clone)]
 pub struct MongoDBHandler {
     pub db_client: Database,
     user_collection: mongodb::Collection<User>,
     unconfirmed_user_collection: mongodb::Collection<UnconfirmedUser>,
+    post_collection: mongodb::Collection<Post>,
 }
 
 impl MongoDBHandler {
@@ -32,6 +34,7 @@ impl MongoDBHandler {
         let user_collection = db_client.collection::<User>("users");
         let unconfirmed_user_collection =
             db_client.collection::<UnconfirmedUser>("unconfirmed_users");
+        let post_collection = db_client.collection::<Post>("posts");
 
         let options = IndexOptions::builder()
             .expire_after(std::time::Duration::from_secs(24 * 60 * 60))
@@ -51,6 +54,7 @@ impl MongoDBHandler {
             db_client,
             user_collection,
             unconfirmed_user_collection,
+            post_collection,
         })
     }
 }
@@ -133,6 +137,41 @@ impl UnconfirmedUserDb for MongoDBHandler {
     ) -> Result<Option<UnconfirmedUser>, ()> {
         self.unconfirmed_user_collection
             .find_one(doc! {"email": email}, None)
+            .await
+            .or(Err(()))
+    }
+}
+
+impl PostDb for MongoDBHandler {
+    async fn create_post(&self, post: &Post) -> Result<(), ()> {
+        match self.post_collection.insert_one(post, None).await {
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
+        }
+    }
+    async fn update_post(&self, id: &str, updated_content: &str) -> Result<u64, ()> {
+        match self
+            .post_collection
+            .update_one(
+                doc! {"id": id},
+                doc! {"$set": doc! {"content": updated_content}},
+                None,
+            )
+            .await
+        {
+            Ok(result) => Ok(result.modified_count),
+            Err(_) => Err(()),
+        }
+    }
+    async fn delete_post(&self, id: &str) -> Result<u64, ()> {
+        match self.post_collection.delete_one(doc! {"id": id}, None).await {
+            Ok(result) => Ok(result.deleted_count),
+            Err(_) => Err(()),
+        }
+    }
+    async fn get_post(&self, id: &str) -> Result<Option<Post>, ()> {
+        self.post_collection
+            .find_one(doc! {"id": id}, None)
             .await
             .or(Err(()))
     }
