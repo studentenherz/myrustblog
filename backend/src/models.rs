@@ -5,6 +5,8 @@ use chrono::{DateTime, Utc};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
+pub use common::{Post, PostsQueryParams};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserRegistration {
     pub username: String,
@@ -59,21 +61,9 @@ impl From<UnconfirmedUser> for User {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String,  // Subject, commonly used to store the user ID
     pub role: String, // The user's role
     pub exp: usize,   // Expiration time
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Post {
-    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-    pub object_id: Option<ObjectId>,
-    pub id: String,
-    pub title: String,
-    pub content: String,
-    pub author: String,
-    #[serde(with = "chrono_datetime_as_bson_datetime")]
-    pub published_at: DateTime<Utc>,
 }

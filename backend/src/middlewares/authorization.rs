@@ -1,12 +1,14 @@
+use core::future::Future;
 use std::{
     future::{ready, Ready},
+    pin::Pin,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use actix_web::{
     body::EitherBody,
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    Error,
+    Error, FromRequest, HttpMessage,
 };
 use actix_web::{http, HttpResponse};
 use futures_util::{future::LocalBoxFuture, FutureExt, TryFutureExt};
@@ -78,19 +80,42 @@ where
                             .as_secs() as usize;
 
                         if now < token.claims.exp {
+                            req.extensions_mut().insert(token.claims);
+
                             return self
                                 .service
                                 .call(req)
                                 .map_ok(ServiceResponse::map_into_left_body)
                                 .boxed_local();
+                        } else {
+                            println!("Expired token: {}, {}", now, token.claims.exp);
                         }
                     }
                 }
             }
         }
 
+        println!("No token");
         Box::pin(async {
             Ok(req.into_response(HttpResponse::Unauthorized().finish().map_into_right_body()))
+        })
+    }
+}
+
+impl FromRequest for Claims {
+    type Error = Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
+
+    fn from_request(req: &actix_web::HttpRequest, _: &mut actix_web::dev::Payload) -> Self::Future {
+        let claims_option = req.extensions().get::<Claims>().cloned();
+        Box::pin(async move {
+            match claims_option {
+                Some(claims) => Ok(claims),
+                None => Err(Error::from(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "No claims in request",
+                ))),
+            }
         })
     }
 }

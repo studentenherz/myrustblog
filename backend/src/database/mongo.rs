@@ -1,8 +1,9 @@
 use std::error::Error;
 
+use futures_util::TryStreamExt;
 use mongodb::{
     bson::doc,
-    options::{ClientOptions, IndexOptions},
+    options::{ClientOptions, FindOptions, IndexOptions},
     Client, Database, IndexModel,
 };
 
@@ -11,7 +12,7 @@ use super::{
     user::{UnconfirmedUserDb, UserDb},
     DBHandler,
 };
-use crate::models::{Post, UnconfirmedUser, User};
+use crate::models::{Post, PostsQueryParams, UnconfirmedUser, User};
 
 #[derive(Clone)]
 pub struct MongoDBHandler {
@@ -149,11 +150,12 @@ impl PostDb for MongoDBHandler {
             Err(_) => Err(()),
         }
     }
-    async fn update_post(&self, id: &str, updated_content: &str) -> Result<u64, ()> {
+
+    async fn update_post(&self, slug: &str, updated_content: &str) -> Result<u64, ()> {
         match self
             .post_collection
             .update_one(
-                doc! {"id": id},
+                doc! {"slug": slug},
                 doc! {"$set": doc! {"content": updated_content}},
                 None,
             )
@@ -163,16 +165,48 @@ impl PostDb for MongoDBHandler {
             Err(_) => Err(()),
         }
     }
-    async fn delete_post(&self, id: &str) -> Result<u64, ()> {
-        match self.post_collection.delete_one(doc! {"id": id}, None).await {
+
+    async fn delete_post(&self, slug: &str) -> Result<u64, ()> {
+        match self
+            .post_collection
+            .delete_one(doc! {"slug": slug}, None)
+            .await
+        {
             Ok(result) => Ok(result.deleted_count),
             Err(_) => Err(()),
         }
     }
-    async fn get_post(&self, id: &str) -> Result<Option<Post>, ()> {
+
+    async fn get_post(&self, slug: &str) -> Result<Option<Post>, ()> {
         self.post_collection
-            .find_one(doc! {"id": id}, None)
+            .find_one(doc! {"slug": slug}, None)
             .await
             .or(Err(()))
+    }
+
+    async fn get_posts(&self, query: &PostsQueryParams) -> Result<Vec<Post>, ()> {
+        let mut options = FindOptions::default();
+
+        let page = query.page.unwrap_or(1);
+        let per_page = query.per_page.unwrap_or(10);
+        options.limit = Some(per_page as i64);
+        options.skip = Some((page - 1) * per_page);
+
+        if let Some(ref sort_by) = query.sort_by {
+            let sort_order = if query.sort_order.as_deref() == Some("desc") {
+                -1
+            } else {
+                1
+            };
+            options.sort = Some(doc! {sort_by: sort_order});
+        }
+
+        if let Ok(cursor) = self.post_collection.find(None, options).await {
+            if let Ok(v) = cursor.try_collect().await {
+                return Ok(v);
+            }
+        }
+
+        Err(())
     }
 }

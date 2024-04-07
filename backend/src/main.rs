@@ -3,7 +3,7 @@ use actix_web::{
     http::header,
     middleware::{Logger, NormalizePath, TrailingSlash},
     web::{self, Data},
-    App, HttpResponse, HttpServer,
+    App, HttpServer,
 };
 
 mod database;
@@ -68,26 +68,41 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(emailer.clone())) // Emailer service
             .app_data(Data::new(config.clone())) // Config env variables
             .service(
-                web::scope("/api/auth")
+                web::scope("/api")
                     .service(
-                        web::resource("/register")
-                            .route(web::post().to(handlers::auth::register_user::<MongoDBHandler>)),
+                        web::scope("/auth")
+                            .service(web::resource("/register").route(
+                                web::post().to(handlers::auth::register_user::<MongoDBHandler>),
+                            ))
+                            .service(web::resource("/confirm").route(
+                                web::post().to(handlers::auth::confirm_user::<MongoDBHandler>),
+                            ))
+                            .service(web::resource("/login").route(
+                                web::post().to(handlers::auth::login_user::<MongoDBHandler>),
+                            )),
                     )
                     .service(
-                        web::resource("/confirm")
-                            .route(web::post().to(handlers::auth::confirm_user::<MongoDBHandler>)),
-                    )
-                    .service(
-                        web::resource("/login")
-                            .route(web::post().to(handlers::auth::login_user::<MongoDBHandler>)),
-                    ),
-            )
-            .service(
-                web::scope("/")
-                    .wrap(authorization::Authorization::new(&config.JWT_SECRET))
-                    .service(
-                        web::resource("")
-                            .route(web::get().to(|| async { HttpResponse::Ok().body("ok") })),
+                        web::scope("/post")
+                            .service(
+                                web::resource("/get-list").route(
+                                    web::get().to(handlers::post::get_posts::<MongoDBHandler>),
+                                ),
+                            )
+                            .service(
+                                web::resource("/read/{slug}").route(
+                                    web::get().to(handlers::post::get_post::<MongoDBHandler>),
+                                ),
+                            )
+                            .wrap(authorization::Authorization::new(&config.JWT_SECRET))
+                            .service(web::resource("/create").route(
+                                web::post().to(handlers::post::create_post::<MongoDBHandler>),
+                            ))
+                            .service(web::resource("/update").route(
+                                web::post().to(handlers::post::update_post::<MongoDBHandler>),
+                            ))
+                            .service(web::resource("/delete/{slug}").route(
+                                web::delete().to(handlers::post::delete_post::<MongoDBHandler>),
+                            )),
                     ),
             )
     })
