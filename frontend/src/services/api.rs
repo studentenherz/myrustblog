@@ -1,6 +1,6 @@
 use crate::{api_url, services::auth::AuthService};
 use common::{CreatePostRequest, Post, PostCreatedResponse, PostsQueryParams, UpdatePostRequest};
-use reqwest::StatusCode;
+use reqwest::{Client, StatusCode};
 
 #[derive(Debug)]
 pub enum ApiError {
@@ -151,34 +151,35 @@ impl ApiService {
         sort_by: Option<String>,
         sort_order: Option<String>,
     ) -> Result<Vec<Post>, ApiError> {
-        if let Ok(builder) = AuthService::protected_get(api_url!("/post/get-list")) {
-            if let Ok(response) = builder
-                .query(&PostsQueryParams {
-                    page,
-                    per_page,
-                    sort_by,
-                    sort_order,
-                })
-                .send()
-                .await
-            {
-                match response.status() {
-                    x if x.is_success() => {
-                        if let Ok(posts) = response.json::<Vec<Post>>().await {
-                            return Ok(posts);
-                        }
+        let client = Client::new();
 
-                        return Err(ApiError::UnknownResponse);
+        if let Ok(response) = client
+            .get(api_url!("/post/get-list"))
+            .query(&PostsQueryParams {
+                page,
+                per_page,
+                sort_by,
+                sort_order,
+            })
+            .send()
+            .await
+        {
+            match response.status() {
+                x if x.is_success() => {
+                    if let Ok(posts) = response.json::<Vec<Post>>().await {
+                        return Ok(posts);
                     }
-                    x if x.is_server_error() => {
-                        return Err(ApiError::ServerInternalError);
-                    }
-                    StatusCode::UNAUTHORIZED => {
-                        return Err(ApiError::Unauthorized);
-                    }
-                    _ => {
-                        return Err(ApiError::UnknownError);
-                    }
+
+                    return Err(ApiError::UnknownResponse);
+                }
+                x if x.is_server_error() => {
+                    return Err(ApiError::ServerInternalError);
+                }
+                StatusCode::UNAUTHORIZED => {
+                    return Err(ApiError::Unauthorized);
+                }
+                _ => {
+                    return Err(ApiError::UnknownError);
                 }
             }
         }

@@ -92,7 +92,10 @@ async fn main() -> std::io::Result<()> {
                                 web::resource("/read/{slug}").route(
                                     web::get().to(handlers::post::get_post::<MongoDBHandler>),
                                 ),
-                            )
+                            ),
+                    )
+                    .service(
+                        web::scope("/post")
                             .wrap(authorization::Authorization::new(&config.JWT_SECRET))
                             .service(web::resource("/create").route(
                                 web::post().to(handlers::post::create_post::<MongoDBHandler>),

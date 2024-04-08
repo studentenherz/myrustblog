@@ -115,7 +115,7 @@ pub async fn login_user<T: DBHandler>(
             if verify(&login_info.password, &user.password).unwrap_or(false) {
                 let max_age: u64 = 60 * 60 * 24;
                 let claims = Claims {
-                    sub: user.email.to_string(),
+                    sub: user.username.to_string(),
                     role: user.role,
                     exp: get_expiration(max_age),
                 };
