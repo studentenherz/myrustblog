@@ -149,3 +149,7 @@ pub fn get_cookie(key: &str) -> Option<String> {
 
     None
 }
+
+pub fn delete_cookie(key: &str) -> Result<(), ()> {
+    set_cookie_with_attributes(key, "", CookieAttributes::new().max_age(0))
+}

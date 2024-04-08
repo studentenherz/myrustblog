@@ -1,10 +1,7 @@
 use reqwest::{Client, IntoUrl, RequestBuilder, StatusCode};
 use serde::Serialize;
 
-use crate::utils::{
-    cookies::{get_cookie, set_cookie_with_attributes, CookieAttributes},
-    get_current_host,
-};
+use crate::utils::{cookies::*, get_current_host};
 
 use crate::api_url;
 
@@ -19,6 +16,7 @@ pub enum AuthError {
     RegistrationError,
     ConfirmationError,
     RegistrationConflict(String),
+    LogoutError,
 }
 
 #[derive(Serialize)]
@@ -160,6 +158,14 @@ impl AuthService {
         // Handle network error
         log::error!("Error in the request");
         Err(AuthError::NetworkError)
+    }
+
+    pub fn logout() -> Result<(), AuthError> {
+        if delete_cookie("_token").is_ok() && delete_cookie("_username").is_ok() {
+            return Ok(());
+        }
+
+        Err(AuthError::LogoutError)
     }
 
     pub fn protected_get<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
