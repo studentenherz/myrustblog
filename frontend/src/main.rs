@@ -2,11 +2,13 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 mod components;
+mod pages;
 mod routes;
 mod services;
 mod utils;
 
 use components::{Home, LoginForm, UserConfirmation, UserRegistration};
+use pages::*;
 use routes::AppRoute;
 
 #[function_component(App)]
@@ -23,7 +25,7 @@ fn switch(routes: AppRoute) -> Html {
         AppRoute::Login => html! { <LoginForm /> },
         AppRoute::Register => html! { <UserRegistration /> },
         AppRoute::Confirm { token } => html! { <UserConfirmation token={token} /> },
-        AppRoute::Home => html! {<Home />},
+        AppRoute::Home => html! { <Layout> <Home /> </Layout>},
     }
 }
 

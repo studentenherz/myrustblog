@@ -4,13 +4,66 @@
 
 body {
     height: 100vh;
+    width: 100vw;
     margin: 0;
     font-family: Arial, sans-serif;
     background: rgb(238,174,202);
     background: linear-gradient(45deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+main {
+    flex-grow: 1;
+}
+
+footer {
+    width: 100%;
+    padding: 30px;
+    background-color: #353535;
+    color: #ccc;
+    box-sizing: border-box;
+
+    a {
+        color: inherit;
+    }
+}
+
+header {
+    width: 100vw;
+    padding: 30px;
+    box-sizing: border-box;
+    background-color: #353535;
+    color: #ccc;
+    display: flex;
+
+    .separator{
+        flex-grow: 1;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .header-user {
+        .button {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+
+            &:hover{
+                background-color: #4CAF50;
+                color: white;
+            }
+        }
+
+        display:block;
+        justify-self: end;
+    }
 }
 
 .login, .register {
@@ -18,7 +71,7 @@ body {
     padding: 30px 40px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    width: 300px; /* Adjust width as necessary */
+    width: 300px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -51,7 +104,7 @@ body {
             background-color: #ececec;
             border: none;
             padding: 15px;
-            padding-left: 40px; /* Adjust as necessary to make room for the icon */
+            padding-left: 40px;
             margin: 5px 0;
             border-radius: 30px;
             width: 100%;
@@ -65,7 +118,7 @@ body {
         margin-bottom: 10px;
         width: 100%;
         padding: 15px;
-        background-color: #4CAF50; /* Green background for the button */
+        background-color: #4CAF50;
         color: white;
         border: none;
         border-radius: 30px;

@@ -14,3 +14,7 @@ pub fn get_current_host() -> Option<String> {
 pub fn is_loged_in() -> bool {
     get_cookie("_token").is_some()
 }
+
+pub fn loged_in_as() -> Option<String> {
+    get_cookie("_username")
+}
