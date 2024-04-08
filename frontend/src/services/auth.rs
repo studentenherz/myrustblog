@@ -175,11 +175,24 @@ impl AuthService {
         }
     }
 
-    pub fn _protected_post<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
+    pub fn protected_post<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
         let client = Client::new();
 
         if let Some(auth_token) = get_cookie("_token") {
             Ok(client.post(url).header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", auth_token),
+            ))
+        } else {
+            Err(AuthError::AuthenticationError)
+        }
+    }
+
+    pub fn protected_delete<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
+        let client = Client::new();
+
+        if let Some(auth_token) = get_cookie("_token") {
+            Ok(client.delete(url).header(
                 reqwest::header::AUTHORIZATION,
                 format!("Bearer {}", auth_token),
             ))
