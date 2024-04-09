@@ -5,6 +5,7 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
+use actix_web_lab::web::spa;
 
 mod database;
 mod handlers;
@@ -117,6 +118,13 @@ async fn main() -> std::io::Result<()> {
                                     ),
                             ),
                     ),
+            )
+            .service(
+                spa()
+                    .index_file("./dist/index.html")
+                    .static_resources_mount("/")
+                    .static_resources_location("./dist")
+                    .finish(),
             )
     })
     .bind("0.0.0.0:8081")?
