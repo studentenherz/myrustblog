@@ -1,9 +1,9 @@
-use reqwest::{Client, IntoUrl, RequestBuilder, StatusCode};
+use gloo_net::http::{Request, RequestBuilder};
+use reqwest::StatusCode;
 use serde::Serialize;
 
-use crate::utils::{cookies::*, get_current_host};
-
 use crate::api_url;
+use crate::utils::{cookies::*, get_current_host};
 
 use common::LoginResponse;
 
@@ -40,15 +40,14 @@ struct UserConfirmation<'a> {
 
 impl AuthService {
     pub async fn login(username: &str, password: &str) -> Result<(), AuthError> {
-        let client = Client::new();
-        let result = client
-            .post(api_url!("/auth/login"))
+        let result = Request::post(&api_url!("/auth/login"))
             .json(&LoginForm { username, password })
+            .unwrap()
             .send()
             .await;
 
         if let Ok(response) = result {
-            match response.status().as_u16() {
+            match response.status() {
                 200..=299 => {
                     if let Ok(res) = response.json::<LoginResponse>().await {
                         if set_cookie_with_attributes(
@@ -94,23 +93,21 @@ impl AuthService {
     }
 
     pub async fn register(username: &str, email: &str, password: &str) -> Result<(), AuthError> {
-        let client = Client::new();
-
         let host = get_current_host();
 
-        let result = client
-            .post(api_url!("/auth/register"))
+        let result = Request::post(&api_url!("/auth/register"))
             .json(&RegistrationForm {
                 username,
                 email,
                 password,
                 host,
             })
+            .unwrap()
             .send()
             .await;
 
         if let Ok(response) = result {
-            return match response.status() {
+            return match StatusCode::from_u16(response.status()).unwrap() {
                 status_code if status_code.is_success() => {
                     log::info!("Successfully registered!");
                     Ok(())
@@ -133,18 +130,16 @@ impl AuthService {
     }
 
     pub async fn confirm(token: &str) -> Result<(), AuthError> {
-        let client = Client::new();
-
-        let result = client
-            .post(api_url!("/auth/confirm"))
+        let result = Request::post(&api_url!("/auth/confirm"))
             .json(&UserConfirmation {
                 confirmation_token: token,
             })
+            .unwrap()
             .send()
             .await;
 
         if let Ok(response) = result {
-            return match response.status() {
+            return match StatusCode::from_u16(response.status()).unwrap() {
                 status_code if status_code.is_success() => {
                     log::info!("User confirmation successful!");
                     Ok(())
@@ -168,39 +163,33 @@ impl AuthService {
         Err(AuthError::LogoutError)
     }
 
-    pub fn protected_get<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
-        let client = Client::new();
-
+    pub fn protected_get(url: &str) -> Result<RequestBuilder, AuthError> {
         if let Some(auth_token) = get_cookie("_token") {
-            Ok(client.get(url).header(
-                reqwest::header::AUTHORIZATION,
-                format!("Bearer {}", auth_token),
+            Ok(Request::get(url).header(
+                reqwest::header::AUTHORIZATION.as_str(),
+                &format!("Bearer {}", auth_token),
             ))
         } else {
             Err(AuthError::AuthenticationError)
         }
     }
 
-    pub fn protected_post<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
-        let client = Client::new();
-
+    pub fn protected_post(url: &str) -> Result<RequestBuilder, AuthError> {
         if let Some(auth_token) = get_cookie("_token") {
-            Ok(client.post(url).header(
-                reqwest::header::AUTHORIZATION,
-                format!("Bearer {}", auth_token),
+            Ok(Request::post(url).header(
+                reqwest::header::AUTHORIZATION.as_str(),
+                &format!("Bearer {}", auth_token),
             ))
         } else {
             Err(AuthError::AuthenticationError)
         }
     }
 
-    pub fn protected_delete<U: IntoUrl>(url: U) -> Result<RequestBuilder, AuthError> {
-        let client = Client::new();
-
+    pub fn protected_delete(url: &str) -> Result<RequestBuilder, AuthError> {
         if let Some(auth_token) = get_cookie("_token") {
-            Ok(client.delete(url).header(
-                reqwest::header::AUTHORIZATION,
-                format!("Bearer {}", auth_token),
+            Ok(Request::delete(url).header(
+                reqwest::header::AUTHORIZATION.as_str(),
+                &format!("Bearer {}", auth_token),
             ))
         } else {
             Err(AuthError::AuthenticationError)

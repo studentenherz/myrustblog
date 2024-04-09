@@ -1,6 +1,7 @@
 use crate::{api_url, services::auth::AuthService};
-use common::{CreatePostRequest, Post, PostCreatedResponse, PostsQueryParams, UpdatePostRequest};
-use reqwest::{Client, StatusCode};
+use common::{CreatePostRequest, Post, PostCreatedResponse, UpdatePostRequest};
+use gloo_net::http::Request;
+use reqwest::StatusCode;
 
 #[derive(Debug)]
 pub enum ApiError {
@@ -15,16 +16,17 @@ pub struct ApiService;
 
 impl ApiService {
     pub async fn create_post(title: &str, content: &str) -> Result<String, ApiError> {
-        if let Ok(builder) = AuthService::protected_post(api_url!("/post/create")) {
+        if let Ok(builder) = AuthService::protected_post(&api_url!("/post/create")) {
             if let Ok(response) = builder
                 .json(&CreatePostRequest {
                     title: String::from(title),
                     content: String::from(content),
                 })
+                .unwrap()
                 .send()
                 .await
             {
-                match response.status() {
+                match StatusCode::from_u16(response.status()).unwrap() {
                     x if x.is_success() => {
                         if let Ok(PostCreatedResponse { slug }) =
                             response.json::<PostCreatedResponse>().await
@@ -51,16 +53,17 @@ impl ApiService {
     }
 
     pub async fn update_post(slug: &str, content: &str) -> Result<String, ApiError> {
-        if let Ok(builder) = AuthService::protected_post(api_url!("/post/update")) {
+        if let Ok(builder) = AuthService::protected_post(&api_url!("/post/update")) {
             if let Ok(response) = builder
                 .json(&UpdatePostRequest {
                     slug: String::from(slug),
                     content: String::from(content),
                 })
+                .unwrap()
                 .send()
                 .await
             {
-                match response.status() {
+                match StatusCode::from_u16(response.status()).unwrap() {
                     x if x.is_success() => {
                         if let Ok(PostCreatedResponse { slug }) =
                             response.json::<PostCreatedResponse>().await
@@ -88,10 +91,10 @@ impl ApiService {
 
     pub async fn delete_post(slug: &str) -> Result<u64, ApiError> {
         if let Ok(builder) =
-            AuthService::protected_delete(api_url!(format!("/post/delete/{}", slug)))
+            AuthService::protected_delete(&api_url!(format!("/post/delete/{}", slug)))
         {
             if let Ok(response) = builder.send().await {
-                match response.status() {
+                match StatusCode::from_u16(response.status()).unwrap() {
                     x if x.is_success() => {
                         if let Ok(deleted_count) = response.json::<u64>().await {
                             return Ok(deleted_count);
@@ -116,14 +119,11 @@ impl ApiService {
     }
 
     pub async fn get_post(slug: &str) -> Result<Option<Post>, ApiError> {
-        let client = Client::new();
-
-        if let Ok(response) = client
-            .get(api_url!(format!("/post/read/{}", slug)))
+        if let Ok(response) = Request::get(&api_url!(format!("/post/read/{}", slug)))
             .send()
             .await
         {
-            match response.status() {
+            match StatusCode::from_u16(response.status()).unwrap() {
                 x if x.is_success() => {
                     if let Ok(post) = response.json::<Post>().await {
                         return Ok(Some(post));
@@ -155,20 +155,26 @@ impl ApiService {
         sort_by: Option<String>,
         sort_order: Option<String>,
     ) -> Result<Vec<Post>, ApiError> {
-        let client = Client::new();
+        let mut params = vec![];
+        if let Some(val) = page {
+            params.push(("page", format!("{}", val)));
+        }
+        if let Some(val) = per_page {
+            params.push(("per_page", format!("{}", val)));
+        }
+        if let Some(val) = sort_by {
+            params.push(("sort_by", val));
+        }
+        if let Some(val) = sort_order {
+            params.push(("sort_order", val));
+        }
 
-        if let Ok(response) = client
-            .get(api_url!("/post/get-list"))
-            .query(&PostsQueryParams {
-                page,
-                per_page,
-                sort_by,
-                sort_order,
-            })
+        if let Ok(response) = Request::get(&api_url!("/post/get-list"))
+            .query(params)
             .send()
             .await
         {
-            match response.status() {
+            match StatusCode::from_u16(response.status()).unwrap() {
                 x if x.is_success() => {
                     if let Ok(posts) = response.json::<Vec<Post>>().await {
                         return Ok(posts);
