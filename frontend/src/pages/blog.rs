@@ -15,19 +15,18 @@ pub struct Blog {
 
 pub enum Msg {
     UpdatePosts(Vec<Post>),
+    NextPage,
+    PreviousPage,
 }
 
-impl Component for Blog {
-    type Message = Msg;
-    type Properties = ();
-
-    fn create(ctx: &Context<Self>) -> Self {
+impl Blog {
+    fn update_posts(page: u64, ctx: &Context<Self>) {
         let update_posts_cb = ctx
             .link()
             .callback(move |posts: Vec<Post>| Msg::UpdatePosts(posts));
 
         spawn_local(async move {
-            match ApiService::get_posts(Some(1), Some(10), None, None).await {
+            match ApiService::get_posts(Some(page), Some(10), None, None).await {
                 Ok(posts) => {
                     update_posts_cb.emit(posts);
                 }
@@ -36,6 +35,15 @@ impl Component for Blog {
                 }
             }
         });
+    }
+}
+
+impl Component for Blog {
+    type Message = Msg;
+    type Properties = ();
+
+    fn create(ctx: &Context<Self>) -> Self {
+        Self::update_posts(1, ctx);
 
         Self {
             page: 1,
@@ -46,14 +54,21 @@ impl Component for Blog {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <Layout>
-                <div class="posts-container">
-                    { for self.posts.iter().map(|post| html! {
-                        <PostCard
-                            title={AttrValue::from(post.title.clone())}
-                            author={AttrValue::from(post.author.clone())}
-                            slug={AttrValue::from(post.slug.clone())}
-                        />
-                    } ) }
+                <div class="blog-posts-list">
+                    <div class="posts-container">
+                        { for self.posts.iter().map(|post| html! {
+                            <PostCard
+                                title={AttrValue::from(post.title.clone())}
+                                author={AttrValue::from(post.author.clone())}
+                                slug={AttrValue::from(post.slug.clone())}
+                            />
+                        } ) }
+                    </div>
+                    <div class="posts-container-navigation">
+                        <button class="prevent-default clickable" disabled={self.page <= 1} onclick={ctx.link().callback(|_|  Msg::PreviousPage)}> <i class="fas fa-arrow-left icon"></i> { "Previous page" } </button>
+                        { self.page }
+                        <button class="prevent-default clickable" onclick={ctx.link().callback(|_|  Msg::NextPage)}> { "Next page" } <i class="fas fa-arrow-right icon"></i> </button>
+                    </div>
                 </div>
             </Layout>
         }
@@ -63,9 +78,18 @@ impl Component for Blog {
         match msg {
             Msg::UpdatePosts(posts) => {
                 self.posts = posts;
+                return true;
+            }
+            Msg::NextPage => {
+                self.page += 1;
+                Self::update_posts(self.page, ctx);
+            }
+            Msg::PreviousPage => {
+                self.page -= 1;
+                Self::update_posts(self.page, ctx);
             }
         }
 
-        true
+        false
     }
 }

@@ -25,6 +25,17 @@ body {
     }
 }
 
+button.prevent-default{
+    border: none;
+    background: none;
+    font-size: inherit;
+    color: inherit;
+}
+
+.icon {
+    margin: 0 5px;
+}
+
 .clickable {
     cursor: pointer;
 }
@@ -70,10 +81,6 @@ header {
         flex-grow: 1;
     }
 
-    .icon {
-        margin: 0 5px;
-    }
-
     nav {
         display: flex;
         align-items: center;
@@ -111,13 +118,32 @@ header {
     }
 }
 
-.posts-container{
+.blog-posts-list{
     width: 60%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.posts-container{
+    width: 100%;
     display: flex;
     flex-flow: row wrap;
     justify-content: space-around;
     gap: 20px;
 
+}
+
+.posts-container-navigation {
+    width: 80%;
+    padding: 40px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+
+    .clickable:hover:not(:disabled){
+        text-decoration: underline;
+    }
 }
 
 .post-card {
