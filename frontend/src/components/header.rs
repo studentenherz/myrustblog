@@ -24,10 +24,10 @@ pub fn header() -> Html {
 
     html! {
         <header>
-            <Link<AppRoute> classes="logo" to={AppRoute::Home}> { "My Rust Blog" } </Link<AppRoute>>
+            <Link<AppRoute> classes="logo" to={AppRoute::Home}> <img src={"/static/logo.webp"} alt={"My Rust Blog"} width={"80px"} /> </Link<AppRoute>>
             <div class="separator"> </div>
             <nav>
-                <Link<AppRoute> classes="logo" to={AppRoute::Blog}> { "Blog" } </Link<AppRoute>>
+                <Link<AppRoute> to={AppRoute::Blog}> { "Blog" } </Link<AppRoute>>
                 <div> { "|" }</div>
                 <div class="header-user">
                     if let Some(username) = loged_in_as() {
