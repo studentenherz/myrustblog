@@ -18,6 +18,7 @@ use common::{utils::*, LoginResponse};
 
 pub async fn register_user<T: DBHandler>(
     db_handler: web::Data<T>,
+    config: web::Data<Config>,
     emailer: web::Data<Emailer>,
     user_info: web::Json<UserRegistration>,
 ) -> impl Responder {
@@ -70,7 +71,7 @@ pub async fn register_user<T: DBHandler>(
             username: user_info.username.clone(),
             email: email.clone(),
             password: hashed_password.clone(),
-            role: String::from("Reader"),
+            role: config.NEW_USER_DEFAULT_ROLE.clone(),
         })
         .await
         .is_ok()

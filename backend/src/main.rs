@@ -24,7 +24,8 @@ create_env_struct! {
         DATABASE_URL,
         SMTP_SERVER,
         SMTP_USERNAME,
-        SMTP_PASSWORD
+        SMTP_PASSWORD,
+        NEW_USER_DEFAULT_ROLE
     }
 }
 
