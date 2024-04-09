@@ -18,5 +18,5 @@ I made this mostly to learn Rust (by doing), but I also want this to become some
 
 ### Want to contribute?
 
-Of course! Just contact me via Telegram [@michelromero](https://t.me/michelromero) of open an issue in the GitHub [repo](https://github.com/studentenherz/myrustblog).
+Of course! Just contact me via Telegram [@michelromero](https://t.me/michelromero) or open an issue in the GitHub [repo](https://github.com/studentenherz/myrustblog).
 
