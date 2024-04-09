@@ -11,7 +11,7 @@ pub struct LayoutProps {
 #[function_component(Layout)]
 pub fn layout(props: &LayoutProps) -> Html {
     html! {
-        <>
+        <div class="layout">
             <Header />
 
             <main>
@@ -19,6 +19,6 @@ pub fn layout(props: &LayoutProps) -> Html {
             </main>
 
             <Footer />
-        </>
+        </div>
     }
 }

@@ -31,6 +31,7 @@ pub fn header() -> Html {
                 <div> { "|" }</div>
                 <div class="header-user">
                     if let Some(username) = loged_in_as() {
+                        <Link<AppRoute> classes="clickable" to={AppRoute::Create}> <i class="fa-regular fa-pen-to-square icon"></i> { "Create" } </Link<AppRoute>>
                         <div>{ username }</div>
                         <button onclick={ logout }> { "Logout" } </button>
                     }

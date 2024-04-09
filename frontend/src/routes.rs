@@ -16,4 +16,6 @@ pub enum AppRoute {
     Home,
     #[at("/404")]
     NotFound,
+    #[at("/create")]
+    Create,
 }
