@@ -7,7 +7,7 @@ mod routes;
 mod services;
 mod utils;
 
-use components::{Home, LoginForm, UserConfirmation, UserRegistration};
+use components::{LoginForm, UserConfirmation, UserRegistration};
 use pages::*;
 use routes::AppRoute;
 
@@ -25,7 +25,7 @@ fn switch(routes: AppRoute) -> Html {
         AppRoute::Login => html! { <LoginForm /> },
         AppRoute::Register => html! { <UserRegistration /> },
         AppRoute::Confirm { token } => html! { <UserConfirmation token={token} /> },
-        AppRoute::Home => html! { <Layout> <Home /> </Layout>},
+        AppRoute::Home => html! {  <Home /> },
         AppRoute::Blog => html! { <Blog /> },
         AppRoute::Post { slug } => html! { <PostPage slug={slug} /> },
         AppRoute::NotFound => html! { <h1> { "404 - Not Found" } </h1> },

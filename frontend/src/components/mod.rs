@@ -1,6 +1,5 @@
 mod footer;
 mod header;
-mod home;
 mod post;
 mod post_card;
 mod service_notifications;
@@ -10,7 +9,6 @@ mod user_registration;
 
 pub use footer::Footer;
 pub use header::Header;
-pub use home::Home;
 pub use post::PostComponent;
 pub use post_card::PostCard;
 pub use service_notifications::*;
