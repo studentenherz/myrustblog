@@ -116,28 +116,32 @@ impl ApiService {
     }
 
     pub async fn get_post(slug: &str) -> Result<Option<Post>, ApiError> {
-        if let Ok(builder) = AuthService::protected_get(api_url!(format!("/post/read/{}", slug))) {
-            if let Ok(response) = builder.send().await {
-                match response.status() {
-                    x if x.is_success() => {
-                        if let Ok(post) = response.json::<Post>().await {
-                            return Ok(Some(post));
-                        }
+        let client = Client::new();
 
-                        return Err(ApiError::UnknownResponse);
+        if let Ok(response) = client
+            .get(api_url!(format!("/post/read/{}", slug)))
+            .send()
+            .await
+        {
+            match response.status() {
+                x if x.is_success() => {
+                    if let Ok(post) = response.json::<Post>().await {
+                        return Ok(Some(post));
                     }
-                    x if x.is_server_error() => {
-                        return Err(ApiError::ServerInternalError);
-                    }
-                    StatusCode::NOT_FOUND => {
-                        return Ok(None);
-                    }
-                    StatusCode::UNAUTHORIZED => {
-                        return Err(ApiError::Unauthorized);
-                    }
-                    _ => {
-                        return Err(ApiError::UnknownError);
-                    }
+
+                    return Err(ApiError::UnknownResponse);
+                }
+                x if x.is_server_error() => {
+                    return Err(ApiError::ServerInternalError);
+                }
+                StatusCode::NOT_FOUND => {
+                    return Ok(None);
+                }
+                StatusCode::UNAUTHORIZED => {
+                    return Err(ApiError::Unauthorized);
+                }
+                _ => {
+                    return Err(ApiError::UnknownError);
                 }
             }
         }
