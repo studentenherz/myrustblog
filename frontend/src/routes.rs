@@ -8,6 +8,12 @@ pub enum AppRoute {
     Register,
     #[at("/confirm/:token")]
     Confirm { token: String },
+    #[at("/blog")]
+    Blog,
+    #[at("/post/:slug")]
+    Post { slug: String },
     #[at("/")]
     Home,
+    #[at("/404")]
+    NotFound,
 }

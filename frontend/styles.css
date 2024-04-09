@@ -3,7 +3,7 @@
 }
 
 body {
-    height: 100vh;
+    min-height: 100vh;
     width: 100vw;
     margin: 0;
     font-family: Arial, sans-serif;
@@ -17,6 +17,10 @@ body {
 
 main {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px 0;
 }
 
 footer {
@@ -34,22 +38,41 @@ footer {
 header {
     width: 100vw;
     padding: 30px;
+    height: 100px;
     box-sizing: border-box;
     background-color: #353535;
     color: #ccc;
     display: flex;
+    align-items: center;
 
     .separator{
         flex-grow: 1;
     }
 
+    nav {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
     a {
         color: inherit;
         text-decoration: none;
+
+        &:hover{
+            text-decoration: underline;
+        }
     }
 
     .header-user {
-        .button {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        button, .button {
+            color: inherit;
+            font-size: inherit;
+            background: none;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -60,9 +83,29 @@ header {
                 color: white;
             }
         }
+    }
+}
 
-        display:block;
-        justify-self: end;
+.posts-container{
+    width: 60%;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    gap: 20px;
+
+}
+
+.post-card {
+    width: 45%;
+    box-sizing: border-box;
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.1s ease-in;
+
+    &:hover{
+        box-shadow: 2px 2px 5px #747474;
     }
 }
 

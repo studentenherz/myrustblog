@@ -12,6 +12,7 @@ dotenv = "0.15.0"
 [dependencies]
 common = { path = "../common" }
 log = "0.4.20"
+pulldown-cmark = { version = "0.10.2", default-features = false, features = ["html"] }
 reqwest = { version = "0.11.24", features = ["json"] }
 serde = { version = "1.0.196", features = ["derive"] }
 wasm-bindgen = "0.2.91"

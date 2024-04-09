@@ -26,6 +26,9 @@ fn switch(routes: AppRoute) -> Html {
         AppRoute::Register => html! { <UserRegistration /> },
         AppRoute::Confirm { token } => html! { <UserConfirmation token={token} /> },
         AppRoute::Home => html! { <Layout> <Home /> </Layout>},
+        AppRoute::Blog => html! { <Blog /> },
+        AppRoute::Post { slug } => html! { <PostPage slug={slug} /> },
+        AppRoute::NotFound => html! { <h1> { "404 - Not Found" } </h1> },
     }
 }
 
