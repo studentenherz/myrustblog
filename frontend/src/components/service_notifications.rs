@@ -5,6 +5,7 @@ pub enum NotificationLevel {
     #[default]
     Success,
     Info,
+    #[allow(dead_code)]
     Warning,
     Error,
 }

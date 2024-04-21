@@ -52,7 +52,7 @@ impl ApiService {
         Err(ApiError::RequestError)
     }
 
-    pub async fn update_post(slug: &str, content: &str) -> Result<String, ApiError> {
+    pub async fn _update_post(slug: &str, content: &str) -> Result<String, ApiError> {
         if let Ok(builder) = AuthService::protected_post(&api_url!("/post/update")) {
             if let Ok(response) = builder
                 .json(&UpdatePostRequest {
@@ -89,9 +89,9 @@ impl ApiService {
         Err(ApiError::RequestError)
     }
 
-    pub async fn delete_post(slug: &str) -> Result<u64, ApiError> {
+    pub async fn _delete_post(slug: &str) -> Result<u64, ApiError> {
         if let Ok(builder) =
-            AuthService::protected_delete(&api_url!(format!("/post/delete/{}", slug)))
+            AuthService::_protected_delete(&api_url!(format!("/post/delete/{}", slug)))
         {
             if let Ok(response) = builder.send().await {
                 match StatusCode::from_u16(response.status()).unwrap() {

@@ -8,7 +8,7 @@ use crate::{
     pages::Layout,
     routes::AppRoute,
     services::api::{ApiError, ApiService},
-    utils::is_loged_in,
+    utils::{is_loged_in, set_title},
 };
 
 #[derive(Debug, Default)]
@@ -31,7 +31,7 @@ impl Component for CreatePage {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self::default()
     }
 
@@ -51,14 +51,14 @@ impl Component for CreatePage {
             <Layout>
                 <div class="create-container">
                     <div class="editor-bar">
-                        <div class="clickable" onclick={ctx.link().callback(|e| Msg::TogglePreview)}>
+                    <div class="clickable" onclick={ctx.link().callback(|_e| Msg::TogglePreview)}>
                             if self.preview {
                                 <i class="fas fa-pencil icon"></i> { "Edit" }
                             }
                             else{
                                 <i class="fas fa-eye icon"></i> { "Preview" }
                             }
-                        </div>
+                            </div>
                         <button disabled={self.title.is_empty() || self.content.is_empty()}
                             onclick={ctx.link().callback(|_| Msg::CreatePost)}
                         > { "Publish" } </button>
@@ -66,7 +66,7 @@ impl Component for CreatePage {
                     if self.preview {
                         <div class="md-preview">
                             { Html::from_html_unchecked(html_out.into()) }
-                        </div>
+                            </div>
                     }
                     else {
                         <div class="md-editor">
@@ -102,6 +102,7 @@ impl Component for CreatePage {
                 self.content = content;
             }
             Msg::UpdateTitle(title) => {
+                set_title(&format!("Creating | {}", title));
                 self.title = title;
             }
             Msg::TogglePreview => {

@@ -16,7 +16,7 @@ impl Component for PostComponent {
     type Message = ();
     type Properties = PostComponentProps;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {}
     }
 

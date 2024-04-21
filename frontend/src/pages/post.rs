@@ -6,6 +6,7 @@ use yew_router::{history::History, Routable};
 
 use crate::{
     components::PostComponent, pages::Layout, routes::AppRoute, services::api::ApiService,
+    utils::set_title,
 };
 use common::Post;
 
@@ -33,7 +34,10 @@ impl Component for PostPage {
 
         spawn_local(async move {
             match ApiService::get_post(&slug).await {
-                Ok(Some(post)) => get_post_cb.emit(post),
+                Ok(Some(post)) => {
+                    set_title(&format!("Blog | {}", &post.title));
+                    get_post_cb.emit(post);
+                }
                 Ok(None) => {
                     yew_router::history::BrowserHistory::new().replace(AppRoute::NotFound.to_path())
                 }
@@ -46,7 +50,7 @@ impl Component for PostPage {
         Self::default()
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <>
                 <Layout>
@@ -58,7 +62,7 @@ impl Component for PostPage {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::GetPost { post } => self.post = Rc::new(post),
         }

@@ -3,7 +3,7 @@ use std::rc::Rc;
 use common::Post;
 use pulldown_cmark::{Event, Parser};
 use yew::prelude::*;
-use yew_router::{history::History, prelude::*};
+use yew_router::prelude::*;
 
 use crate::routes::AppRoute;
 
@@ -16,8 +16,6 @@ const MAX_CONTENT_PREVIEW_LENGTH: usize = 150;
 
 #[function_component(PostCard)]
 pub fn post_card(Props { post }: &Props) -> Html {
-    let slug = use_state(|| post.slug.to_string());
-
     let mut content = String::new();
     let parser = Parser::new(&post.content);
 

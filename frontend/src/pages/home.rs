@@ -1,7 +1,7 @@
 use pulldown_cmark::{html::push_html, Parser};
 use yew::prelude::*;
 
-use crate::pages::Layout;
+use crate::{pages::Layout, utils::set_title};
 
 #[derive(Debug, Default)]
 pub struct Home {
@@ -14,13 +14,15 @@ impl Component for Home {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
+        set_title("Home");
+
         Self {
             content: include_str!("../../../README.md").to_string(),
         }
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         let parser = Parser::new(&self.content);
 
         let mut html_out = String::new();

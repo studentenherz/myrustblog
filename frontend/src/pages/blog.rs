@@ -4,7 +4,7 @@ use std::rc::Rc;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::{components::PostCard, pages::Layout, services::api::ApiService};
+use crate::{components::PostCard, pages::Layout, services::api::ApiService, utils::set_title};
 
 use common::Post;
 
@@ -44,6 +44,8 @@ impl Component for Blog {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self::update_posts(1, ctx);
+
+        set_title("Blog");
 
         Self {
             page: 1,

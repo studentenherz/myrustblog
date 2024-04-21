@@ -163,7 +163,7 @@ impl AuthService {
         Err(AuthError::LogoutError)
     }
 
-    pub fn protected_get(url: &str) -> Result<RequestBuilder, AuthError> {
+    pub fn _protected_get(url: &str) -> Result<RequestBuilder, AuthError> {
         if let Some(auth_token) = get_cookie("_token") {
             Ok(Request::get(url).header(
                 reqwest::header::AUTHORIZATION.as_str(),
@@ -185,7 +185,7 @@ impl AuthService {
         }
     }
 
-    pub fn protected_delete(url: &str) -> Result<RequestBuilder, AuthError> {
+    pub fn _protected_delete(url: &str) -> Result<RequestBuilder, AuthError> {
         if let Some(auth_token) = get_cookie("_token") {
             Ok(Request::delete(url).header(
                 reqwest::header::AUTHORIZATION.as_str(),
