@@ -65,9 +65,9 @@ impl Component for Blog {
                         } ) }
                     </div>
                     <div class="posts-container-navigation">
-                        <button class="prevent-default clickable" disabled={self.page <= 1} onclick={ctx.link().callback(|_|  Msg::PreviousPage)}> <i class="fas fa-arrow-left icon"></i> { "Previous page" } </button>
+                        <button class="prevent-default" disabled={self.page <= 1} onclick={ctx.link().callback(|_|  Msg::PreviousPage)}> <i class="fas fa-arrow-left icon"></i> { "Previous page" } </button>
                         { self.page }
-                        <button class="prevent-default clickable" onclick={ctx.link().callback(|_|  Msg::NextPage)}> { "Next page" } <i class="fas fa-arrow-right icon"></i> </button>
+                        <button class="prevent-default" onclick={ctx.link().callback(|_|  Msg::NextPage)}> { "Next page" } <i class="fas fa-arrow-right icon"></i> </button>
                     </div>
                 </div>
             </Layout>

@@ -2,11 +2,19 @@
     --info-background: #d1eff7;
     --footer-top-margin: 50px;
     --footer-height: 200px;
-    --black-color: #202020;
+    --max-with-central-content: 72rem;
+    --dark-bg-color: #292828;
+    --dark-fg-color: #d4be98;
+    --dark-secondary-fg-color: #a89984;
+    --parenthesis-color: #ea6962;
+    --link-color: #89b482;
+
+    box-sizing: border-box;
 }
 
 body {
-    color: var(--black-color);
+    color: var(--dark-fg-color);
+    background-color: var(--dark-bg-color);
     min-height: 100vh;
     width: 100vw;
     margin: 0;
@@ -17,6 +25,7 @@ body {
     align-items: center;
 
     .layout{
+        width: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -40,17 +49,23 @@ button.prevent-default{
     cursor: pointer;
 }
 
+a {
+    color: var(--link-color);
+}
+
+.center-content {
+    max-width: var(--max-with-central-content);
+}
+
 main {
     width: 100%;
+    padding: 60px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 50px 0;
 
-    .post {
-        width: 60%;
-    }
 }
 
 footer {
@@ -58,24 +73,44 @@ footer {
     margin-top: var(--footer-top-margin);
     height: var(--footer-height);
     padding: 30px;
-    background-color: #353535;
-    color: #ccc;
-    box-sizing: border-box;
 
-    a {
-        color: inherit;
-    }
 }
 
 header {
     width: 100vw;
     padding: 30px;
     height: 100px;
-    box-sizing: border-box;
-    color: var(--black-color);
     display: flex;
     align-items: center;
-    border-bottom: 1px solid var(--black-color);
+
+    .hide-unless-hover .hidden{
+        display: inline-block;
+        vertical-align: bottom;
+        max-width: 0%;
+        transition: all 0.4s ease-in-out;
+        overflow: hidden;
+    }
+
+    .hide-unless-hover:hover {
+        .hidden {
+            max-width: 100%;
+        }
+    }
+
+
+    .logo{
+        font-size: 1.5rem;
+        text-decoration: none;
+
+
+        &:hover{
+            text-decoration: none;
+        }
+
+        .paren {
+            color: var(--parenthesis-color);
+        }
+    }
 
     .separator{
         flex-grow: 1;
@@ -88,7 +123,6 @@ header {
     }
 
     a {
-        color: inherit;
         text-decoration: none;
 
         &:hover{
@@ -101,25 +135,30 @@ header {
         align-items: center;
         gap: 20px;
 
-        button, .button {
-            color: inherit;
-            font-size: inherit;
-            background: none;
-            padding: 15px;
-            border: 1px solid var(--black-color);
-            border-radius: 5px;
-            cursor: pointer;
+    }
+}
 
-            &:hover{
-                background: linear-gradient(45deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
-                text-decoration: none;
-            }
-        }
+button, .button {
+    color: inherit;
+    font-size: inherit;
+    background: none;
+    padding: 15px;
+    border: 1px solid var(--dark-secondary-fg-color);
+    border-radius: 5px;
+
+    &:disabled {
+        opacity: 0.5;
+    }
+
+    &:not([disabled]):hover{
+        cursor: pointer;
+        border: 1px solid var(--parenthesis-color);
+        text-decoration: none;
     }
 }
 
 .blog-posts-list{
-    width: 60%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -131,41 +170,50 @@ header {
     flex-flow: row wrap;
     justify-content: space-around;
     gap: 20px;
+    row-gap: 20px;
 
 }
 
 .posts-container-navigation {
     width: 80%;
     padding: 40px;
-    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 
-    .clickable:hover:not(:disabled){
+    button:hover:not(:disabled){
         text-decoration: underline;
+        border: none;
     }
 }
 
 .post-card {
-    width: 45%;
-    box-sizing: border-box;
-    border: 1px solid var(--black-color);
+    width: 47%;
+    border: 1px solid var(--dark-secondary-fg-color);
     border-radius: 5px;
     padding: 20px;
     cursor: pointer;
     transition: all 0.1s ease-in;
 
     &:hover{
-        box-shadow: 2px 2px 5px #747474;
+        border-color: var(--link-color);
     }
 }
 
 .create-container{
-    width: 60%;
+    width: 100%;
     height: 100%;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+
+    input, textarea {
+        background: inherit;
+        color: inherit;
+        border: 1px solid var(--dark-secondary-fg-color);
+        border-radius: 5px;
+        font-size: inherit;
+    }
 
     .md-editor {
         width: 100%;
@@ -177,7 +225,7 @@ header {
 
 
         input {
-            padding: 5px 20px;
+            padding: 10px 20px;
         }
 
         textarea {
@@ -185,7 +233,6 @@ header {
             flex-grow: 1;
             width: 100%;
             resize: none;
-            box-sizing: border-box;
         }
     }
 
@@ -204,21 +251,6 @@ header {
             margin: 0 5px;
         }
 
-        button {
-            font-size: inherit;
-            cursor: pointer;
-            /* color: white; */
-            /* font-weight: bold; */
-            background: linear-gradient(45deg, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
-            border: 1px solid var(--black-color);
-            border-radius: 5px;
-            padding: 15px;
-
-            &:disabled{
-                cursor: not-allowed;
-            }
-        }
-
     }
 }
 
@@ -227,12 +259,14 @@ header {
     padding: 30px 40px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
+    width: 90%;
+    max-width: 350px;
     display: flex;
     flex-direction: column;
     align-items: center;
 
     h2 {
+        color: #5c5c5c;
         text-align: center;
         margin-bottom: 20px;
     }
@@ -264,7 +298,6 @@ header {
             margin: 5px 0;
             border-radius: 30px;
             width: 100%;
-            box-sizing: border-box;
         }
     }
 
@@ -288,6 +321,10 @@ header {
 
     button:not([disabled]):hover, button:focus {
         background-color: #45a049;
+    }
+
+    button:hover{
+        border: none;
     }
 
     a {

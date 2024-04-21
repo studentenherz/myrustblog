@@ -14,7 +14,7 @@ pub fn layout(props: &LayoutProps) -> Html {
         <div class="layout">
             <Header />
 
-            <main>
+            <main class="center-content">
                 { for props.children.iter() }
             </main>
 

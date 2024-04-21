@@ -11,6 +11,17 @@ pub fn get_current_host() -> Option<String> {
     None
 }
 
+pub fn set_title(title: &str) -> bool {
+    if let Some(window) = window() {
+        if let Some(document) = window.document() {
+            document.set_title(title);
+            return true;
+        }
+    }
+
+    false
+}
+
 pub fn is_loged_in() -> bool {
     get_cookie("_token").is_some()
 }

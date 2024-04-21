@@ -23,8 +23,8 @@ pub fn header() -> Html {
     };
 
     html! {
-        <header>
-            <Link<AppRoute> classes="logo" to={AppRoute::Home}> <img src={"/static/logo.webp"} alt={"My Rust Blog"} width={"80px"} /> </Link<AppRoute>>
+        <header class="center-content">
+            <Link<AppRoute> classes="logo hide-unless-hover" to={AppRoute::Home}> <span class="paren"> {"{"}</span> <span> { " st" } </span> <span class="hidden"> { "udentenherz" } </span> <span> { " " } </span> <span class="paren"> {"}"}</span> </Link<AppRoute>>
             <div class="separator"> </div>
             <nav>
                 <Link<AppRoute> to={AppRoute::Blog}> { "Blog" } </Link<AppRoute>>
