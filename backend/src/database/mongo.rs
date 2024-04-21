@@ -209,4 +209,12 @@ impl PostDb for MongoDBHandler {
 
         Err(())
     }
+
+    async fn calculate_total_pages(&self, per_page: u64) -> Result<u64, ()> {
+        if let Ok(total_posts) = self.post_collection.count_documents(None, None).await {
+            let total_pages = (total_posts as f64 / per_page as f64).ceil() as u64;
+            return Ok(total_pages);
+        }
+        Err(())
+    }
 }

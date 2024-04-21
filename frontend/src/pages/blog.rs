@@ -3,34 +3,32 @@ use std::rc::Rc;
 
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
-use crate::{components::PostCard, pages::Layout, routes::AppRoute, services::api::ApiService};
+use crate::{components::PostCard, pages::Layout, services::api::ApiService};
 
 use common::Post;
 
 #[derive(Debug, Default)]
 pub struct Blog {
     pub page: u64,
+    pub pages: u64,
     pub posts: Vec<Rc<Post>>,
 }
 
 pub enum Msg {
-    UpdatePosts(Vec<Post>),
+    UpdatePosts((Vec<Post>, u64)),
     NextPage,
     PreviousPage,
 }
 
 impl Blog {
     fn update_posts(page: u64, ctx: &Context<Self>) {
-        let update_posts_cb = ctx
-            .link()
-            .callback(move |posts: Vec<Post>| Msg::UpdatePosts(posts));
+        let update_posts_cb = ctx.link().callback(Msg::UpdatePosts);
 
         spawn_local(async move {
             match ApiService::get_posts(Some(page), Some(10), None, None).await {
-                Ok(posts) => {
-                    update_posts_cb.emit(posts);
+                Ok((posts, pages)) => {
+                    update_posts_cb.emit((posts, pages.unwrap_or(1)));
                 }
                 Err(err) => {
                     info!("Error {:?}", err);
@@ -65,9 +63,19 @@ impl Component for Blog {
                         } ) }
                     </div>
                     <div class="posts-container-navigation">
-                        <button class="prevent-default" disabled={self.page <= 1} onclick={ctx.link().callback(|_|  Msg::PreviousPage)}> <i class="fas fa-arrow-left icon"></i> { "Previous page" } </button>
-                        { self.page }
-                        <button class="prevent-default" onclick={ctx.link().callback(|_|  Msg::NextPage)}> { "Next page" } <i class="fas fa-arrow-right icon"></i> </button>
+                        <button
+                            class="prevent-default"
+                            disabled={self.page <= 1}
+                            onclick={ctx.link().callback(|_|  Msg::PreviousPage)}>
+                                <i class="fas fa-arrow-left icon"></i> { "Previous page" }
+                        </button>
+                        <div>{ self.page } { " / " }  {self.pages} </div>
+                        <button
+                            class="prevent-default"
+                            disabled={self.page >= self.pages}
+                            onclick={ctx.link().callback(|_|  Msg::NextPage)}>
+                                { "Next page" } <i class="fas fa-arrow-right icon"></i>
+                        </button>
                     </div>
                 </div>
             </Layout>
@@ -76,8 +84,9 @@ impl Component for Blog {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::UpdatePosts(posts) => {
+            Msg::UpdatePosts((posts, pages)) => {
                 self.posts = posts.iter().map(|post| Rc::new(post.clone())).collect();
+                self.pages = pages;
                 return true;
             }
             Msg::NextPage => {

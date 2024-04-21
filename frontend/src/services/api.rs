@@ -1,5 +1,5 @@
 use crate::{api_url, services::auth::AuthService};
-use common::{CreatePostRequest, Post, PostCreatedResponse, UpdatePostRequest};
+use common::{CreatePostRequest, GetPostsResponse, Post, PostCreatedResponse, UpdatePostRequest};
 use gloo_net::http::Request;
 use reqwest::StatusCode;
 
@@ -154,7 +154,7 @@ impl ApiService {
         per_page: Option<u64>,
         sort_by: Option<String>,
         sort_order: Option<String>,
-    ) -> Result<Vec<Post>, ApiError> {
+    ) -> Result<(Vec<Post>, Result<u64, ()>), ApiError> {
         let mut params = vec![];
         if let Some(val) = page {
             params.push(("page", format!("{}", val)));
@@ -176,8 +176,8 @@ impl ApiService {
         {
             match StatusCode::from_u16(response.status()).unwrap() {
                 x if x.is_success() => {
-                    if let Ok(posts) = response.json::<Vec<Post>>().await {
-                        return Ok(posts);
+                    if let Ok(response) = response.json::<GetPostsResponse>().await {
+                        return Ok((response.posts, response.pages));
                     }
 
                     return Err(ApiError::UnknownResponse);

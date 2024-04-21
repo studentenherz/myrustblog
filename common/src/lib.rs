@@ -47,3 +47,9 @@ pub struct PostsQueryParams {
     pub sort_by: Option<String>,
     pub sort_order: Option<String>,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct GetPostsResponse {
+    pub posts: Vec<Post>,
+    pub pages: Result<u64, ()>,
+}

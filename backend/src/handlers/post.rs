@@ -6,7 +6,7 @@ use crate::{
     models::{Claims, Post, PostsQueryParams},
     utils::generate_unique_slug,
 };
-use common::{CreatePostRequest, PostCreatedResponse, UpdatePostRequest};
+use common::{CreatePostRequest, GetPostsResponse, PostCreatedResponse, UpdatePostRequest};
 
 pub async fn create_post<T: DBHandler>(
     db_handler: web::Data<T>,
@@ -91,7 +91,12 @@ pub async fn get_posts<T: DBHandler>(
     query: web::Query<PostsQueryParams>,
 ) -> impl Responder {
     match db_handler.get_posts(&query).await {
-        Ok(posts) => HttpResponse::Ok().json(posts),
+        Ok(posts) => HttpResponse::Ok().json(GetPostsResponse {
+            posts,
+            pages: db_handler
+                .calculate_total_pages(query.per_page.unwrap_or(10))
+                .await,
+        }),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
