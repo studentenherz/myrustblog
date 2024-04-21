@@ -45,6 +45,10 @@ button.prevent-default{
     margin: 0 5px;
 }
 
+.separator{
+    flex-grow: 1;
+}
+
 .clickable {
     cursor: pointer;
 }
@@ -79,6 +83,33 @@ footer {
     height: var(--footer-height);
     padding: 30px;
 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    &::before {
+        content: "";
+        width: 100px;
+        border-top: 2px solid var(--dark-secondary-fg-color);
+    }
+}
+
+.socials {
+    padding: 30px;
+    display: flex;
+    gap: 10px;
+
+    a {
+        color: inherit;
+
+        &:hover {
+            color: var(--link-color);
+        }
+    }
+
+    .icon {
+        font-size: 2rem;
+    }
 }
 
 header {
@@ -115,10 +146,6 @@ header {
         .paren {
             color: var(--parenthesis-color);
         }
-    }
-
-    .separator{
-        flex-grow: 1;
     }
 
     nav {
@@ -229,6 +256,8 @@ button, .button {
 .post {
     width: 100%;
 }
+
+
 
 .post-title {
     text-align: center;
