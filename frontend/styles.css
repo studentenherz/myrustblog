@@ -208,10 +208,6 @@ button, .button {
     }
 
     .lower-strip {
-        .date {
-            font-style: italic;
-            color: var(--dark-secondary-fg-color);
-        }
 
         margin-top: 20px;
         width: 100%;
@@ -223,6 +219,28 @@ button, .button {
     &:hover{
         border-color: var(--parenthesis-color);
     }
+}
+
+.date {
+    font-style: italic;
+    color: var(--dark-secondary-fg-color);
+}
+
+.post {
+    width: 100%;
+}
+
+.post-title {
+    text-align: center;
+    p {
+        margin: 0;
+    }
+
+    .details{
+        opacity: 0.5;
+    }
+
+    margin-bottom: 5rem;
 }
 
 .create-container{

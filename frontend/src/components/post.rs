@@ -21,13 +21,23 @@ impl Component for PostComponent {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let parser = Parser::new(&ctx.props().post.content);
+        let post = &ctx.props().post;
+        let parser = Parser::new(&post.content);
 
         let mut html_out = String::new();
         push_html(&mut html_out, parser);
 
         html! {
-            { Html::from_html_unchecked(html_out.into()) }
+            <>
+                <div class="post-title">
+                    <h1> { &post.title } </h1>
+                    <div class="details">
+                        <p> { &post.author } </p>
+                        <p class="date"> { &post.published_at.format("%d %b %Y").to_string() } </p>
+                    </div>
+                </div>
+                { Html::from_html_unchecked(html_out.into()) }
+            </>
 
         }
     }
