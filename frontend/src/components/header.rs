@@ -24,9 +24,15 @@ pub fn header() -> Html {
 
     html! {
         <header class="center-content">
-            <Link<AppRoute> classes="logo hide-unless-hover" to={AppRoute::Home}> <span class="paren"> {"{"}</span> <span> { " st" } </span> <span class="hidden"> { "udentenherz" } </span> <span> { " " } </span> <span class="paren"> {"}"}</span> </Link<AppRoute>>
+            <Link<AppRoute>
+                classes="logo hide-unless-hover"
+                to={AppRoute::Home}> <span class="paren">
+                    {"{"}</span> <span> { " st" } </span> <span class="hidden"> { "udentenherz" } </span>
+                    <span> { " " } </span> <span class="paren"> {"}"}</span>
+            </Link<AppRoute>>
             <div class="separator"> </div>
             <nav>
+                <Link<AppRoute> to={AppRoute::Home}> { "Home" } </Link<AppRoute>>
                 <Link<AppRoute> to={AppRoute::Blog}> { "Blog" } </Link<AppRoute>>
                 <div> { "|" }</div>
                 <div class="header-user">
