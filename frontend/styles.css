@@ -51,6 +51,11 @@ button.prevent-default{
 
 a {
     color: var(--link-color);
+    text-decoration: none;
+
+    &:hover{
+        text-decoration: underline;
+    }
 }
 
 .center-content {
@@ -124,10 +129,6 @@ header {
 
     a {
         text-decoration: none;
-
-        &:hover{
-            text-decoration: underline;
-        }
     }
 
     .header-user {
@@ -188,15 +189,39 @@ button, .button {
 }
 
 .post-card {
+    display: flex;
+    flex-direction: column;
     width: 47%;
     border: 1px solid var(--dark-secondary-fg-color);
     border-radius: 5px;
     padding: 20px;
-    cursor: pointer;
     transition: all 0.1s ease-in;
 
+    .preview {
+        padding-left: 10px;
+        opacity: 0.5;
+        flex-grow: 1;
+
+        &::before {
+            content: "> ";
+        }
+    }
+
+    .lower-strip {
+        .date {
+            font-style: italic;
+            color: var(--dark-secondary-fg-color);
+        }
+
+        margin-top: 20px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
     &:hover{
-        border-color: var(--link-color);
+        border-color: var(--parenthesis-color);
     }
 }
 

@@ -1,4 +1,6 @@
 use log::info;
+use std::rc::Rc;
+
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -10,7 +12,7 @@ use common::Post;
 #[derive(Debug, Default)]
 pub struct Blog {
     pub page: u64,
-    pub posts: Vec<Post>,
+    pub posts: Vec<Rc<Post>>,
 }
 
 pub enum Msg {
@@ -58,9 +60,7 @@ impl Component for Blog {
                     <div class="posts-container">
                         { for self.posts.iter().map(|post| html! {
                             <PostCard
-                                title={AttrValue::from(post.title.clone())}
-                                author={AttrValue::from(post.author.clone())}
-                                slug={AttrValue::from(post.slug.clone())}
+                                post = {post.clone()}
                             />
                         } ) }
                     </div>
@@ -77,7 +77,7 @@ impl Component for Blog {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::UpdatePosts(posts) => {
-                self.posts = posts;
+                self.posts = posts.iter().map(|post| Rc::new(post.clone())).collect();
                 return true;
             }
             Msg::NextPage => {

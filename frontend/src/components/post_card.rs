@@ -1,3 +1,7 @@
+use std::rc::Rc;
+
+use common::Post;
+use pulldown_cmark::{Event, Parser};
 use yew::prelude::*;
 use yew_router::{history::History, prelude::*};
 
@@ -5,31 +9,32 @@ use crate::routes::AppRoute;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
-    #[prop_or_default]
-    pub title: AttrValue,
-    #[prop_or_default]
-    pub author: AttrValue,
-    pub slug: AttrValue,
+    pub post: Rc<Post>,
 }
 
-#[function_component(PostCard)]
-pub fn post_card(props: &Props) -> Html {
-    let slug = use_state(|| props.slug.to_string());
+const MAX_CONTENT_PREVIEW_LENGTH: usize = 150;
 
-    let go_to_slug = move |_| {
-        yew_router::history::BrowserHistory::new().push(
-            AppRoute::Post {
-                slug: slug.to_string(),
-            }
-            .to_path(),
-        );
-    };
+#[function_component(PostCard)]
+pub fn post_card(Props { post }: &Props) -> Html {
+    let slug = use_state(|| post.slug.to_string());
+
+    let mut content = String::new();
+    let parser = Parser::new(&post.content);
+
+    for event in parser {
+        if let Event::Text(text) = event {
+            content += &text;
+        }
+    }
 
     html! {
-        <div class="post-card"  onclick={go_to_slug} >
-            <h2> { &props.title } </h2>
-            <p> { "by " } { &props.author } </p>
-            { "see more..." }
+        <div class="post-card" >
+            <h2> { &post.title } </h2>
+            <p class="preview"> { &content[..MAX_CONTENT_PREVIEW_LENGTH.min(content.len())] } { "..." } </p>
+            <div class="lower-strip">
+                <p class="date" > { &post.published_at.format("%d %b %Y").to_string() } </p>
+                <Link<AppRoute> to={AppRoute::Post { slug: post.slug.clone()}} > { "see more..." } </Link<AppRoute>>
+            </div>
         </div>
     }
 }
