@@ -20,3 +20,15 @@ pub fn is_valid_password(password: &str) -> bool {
 
     allowed_chars_regex.is_match(password) && password.len() >= 3 && password.len() <= 100
 }
+
+pub fn title_to_slug(title: &str) -> String {
+    title
+        .to_lowercase()
+        .chars()
+        .map(|c| if c.is_alphanumeric() { c } else { '-' })
+        .collect::<String>()
+        .split('-')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
+}

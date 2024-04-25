@@ -1,6 +1,7 @@
 use rand::{distributions::Alphanumeric, Rng};
 
 use crate::database::DBHandler;
+use common::utils::title_to_slug;
 
 pub fn generate_random_alphanumeric_str(len: usize) -> String {
     let rng = rand::thread_rng();
@@ -8,18 +9,6 @@ pub fn generate_random_alphanumeric_str(len: usize) -> String {
         .take(len)
         .map(char::from)
         .collect()
-}
-
-fn title_to_slug(title: &str) -> String {
-    title
-        .to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() { c } else { '-' })
-        .collect::<String>()
-        .split('-')
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join("-")
 }
 
 pub async fn generate_unique_slug(db_handler: &impl DBHandler, title: &str) -> Result<String, ()> {
