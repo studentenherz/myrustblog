@@ -5,14 +5,18 @@ use yew::prelude::*;
 use yew_router::{history::History, Routable};
 
 use crate::{
-    components::PostComponent, pages::Layout, routes::AppRoute, services::api::ApiService,
-    utils::set_title,
+    pages::Layout,
+    routes::AppRoute,
+    services::api::ApiService,
+    utils::{get_headers_and_html_with_ids, set_title, Header as MyHeader},
 };
 use common::Post;
 
 #[derive(Debug, Default)]
 pub struct PostPage {
-    post: Rc<Post>,
+    pub post: Post,
+    pub post_content: String,
+    pub headers: Vec<MyHeader>,
 }
 
 pub enum Msg {
@@ -54,8 +58,28 @@ impl Component for PostPage {
         html! {
             <>
                 <Layout>
-                    <div class={"post"}>
-                        <PostComponent post={Rc::clone(&self.post)} />
+                    <div class={"post-container"}>
+                        <div class="content-table">
+                            <h2> { "Contents" } </h2>
+                            <ul>
+                                { self.headers.iter().map(|header| html! {
+                                        <li class={format!("header-{:?}", header.level)}>
+                                            <a href={format!("#{}", header.id.clone())}>  { header.text.clone() } </a>
+                                        </li>
+                                    }).collect::<Html>()
+                                }
+                            </ul>
+                        </div>
+                        <div class="post">
+                            <div class="post-title">
+                                <h1> { &self.post.title } </h1>
+                                <div class="details">
+                                    <p> { &self.post.author } </p>
+                                    <p class="date"> { &self.post.published_at.format("%d %b %Y").to_string() } </p>
+                                </div>
+                            </div>
+                            { Html::from_html_unchecked(self.post_content.clone().into()) }
+                        </div>
                     </div>
                 </Layout>
             </>
@@ -64,7 +88,10 @@ impl Component for PostPage {
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::GetPost { post } => self.post = Rc::new(post),
+            Msg::GetPost { post } => {
+                (self.headers, self.post_content) = get_headers_and_html_with_ids(&post.content);
+                self.post = post;
+            }
         }
 
         true
