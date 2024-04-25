@@ -12,6 +12,7 @@ pub fn footer() -> Html {
             </div>
             <center>
                 { "Made using " } <a href={"https://yew.rs/"} target={"_blank"}> {"Yew"} </a>
+                {" and "} <a href={"https://actix.rs/"} target={"_blank"}> {"Actix"} </a>
                 <i>{ " by Michel Romero"}</i>
             </center>
         </footer>
