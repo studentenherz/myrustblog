@@ -1,4 +1,4 @@
-use pulldown_cmark::{html::push_html, Parser};
+use pulldown_cmark::{html::push_html, Options, Parser};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{wasm_bindgen::JsCast, HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
@@ -42,7 +42,10 @@ impl Component for CreatePage {
             };
         }
 
-        let parser = Parser::new(&self.content);
+        let parser = Parser::new_ext(
+            &self.content,
+            Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+        );
 
         let mut html_out = String::new();
         push_html(&mut html_out, parser);

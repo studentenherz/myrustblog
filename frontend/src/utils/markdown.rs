@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pulldown_cmark::{html, CowStr, Event, HeadingLevel, Parser, Tag, TagEnd};
+use pulldown_cmark::{html, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 use common::utils::title_to_slug;
 
@@ -12,7 +12,10 @@ pub struct Header {
 }
 
 pub fn get_headers_and_html_with_ids(html_text: &str) -> (Vec<Header>, String) {
-    let parser = Parser::new(html_text);
+    let parser = Parser::new_ext(
+        html_text,
+        Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+    );
     let mut headers: Vec<Header> = vec![];
     let mut in_header = false;
     let mut header_level: HeadingLevel = HeadingLevel::H1;
