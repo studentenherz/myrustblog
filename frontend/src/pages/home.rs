@@ -30,8 +30,10 @@ impl Component for Home {
 
         html! {
             <Layout>
-                <div class="post">
-                    { Html::from_html_unchecked(html_out.into()) }
+                <div class="home-container">
+                    <div class="home">
+                        { Html::from_html_unchecked(html_out.into()) }
+                    </div>
                 </div>
             </Layout>
         }

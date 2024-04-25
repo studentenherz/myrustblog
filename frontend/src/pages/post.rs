@@ -58,6 +58,13 @@ impl Component for PostPage {
         html! {
             <>
                 <Layout>
+                    <div class="post-title">
+                        <h1> { &self.post.title } </h1>
+                        <div class="details">
+                            <p> { &self.post.author } </p>
+                            <p class="date"> { &self.post.published_at.format("%d %b %Y").to_string() } </p>
+                        </div>
+                    </div>
                     <div class={"post-container"}>
                         <div class="content-table">
                             <h2> { "Contents" } </h2>
@@ -71,13 +78,6 @@ impl Component for PostPage {
                             </ul>
                         </div>
                         <div class="post">
-                            <div class="post-title">
-                                <h1> { &self.post.title } </h1>
-                                <div class="details">
-                                    <p> { &self.post.author } </p>
-                                    <p class="date"> { &self.post.published_at.format("%d %b %Y").to_string() } </p>
-                                </div>
-                            </div>
                             { Html::from_html_unchecked(self.post_content.clone().into()) }
                         </div>
                     </div>
