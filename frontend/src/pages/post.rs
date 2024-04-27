@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::{history::History, Routable};
