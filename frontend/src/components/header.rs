@@ -1,6 +1,4 @@
 use log::info;
-use wasm_bindgen::JsCast;
-use web_sys::{window, Window};
 use yew::prelude::*;
 use yew_router::prelude::*;
 use yewdux::use_store;
@@ -14,11 +12,6 @@ pub fn header() -> Html {
     let logout = |_| match AuthService::logout() {
         Ok(_) => {
             info!("Loged out");
-            if let Some(window) = window() {
-                if let Ok(window) = window.dyn_into::<Window>() {
-                    let _ = window.location().reload();
-                }
-            }
         }
         Err(_) => {
             log::error!("Error loging out")
