@@ -3,12 +3,13 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{wasm_bindgen::JsCast, HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
 use yew_router::{history::History, prelude::*};
+use yewdux::Dispatch;
 
 use crate::{
     pages::Layout,
     routes::AppRoute,
     services::api::{ApiError, ApiService},
-    utils::{is_loged_in, set_title},
+    utils::{is_loged_in, set_title, AppState},
 };
 
 #[derive(Debug, Default)]
@@ -16,6 +17,7 @@ pub struct CreatePage {
     title: String,
     content: String,
     preview: bool,
+    content_rows: u32,
 }
 
 pub enum Msg {
@@ -27,6 +29,8 @@ pub enum Msg {
     Ignore,
 }
 
+const CHARS_PER_LINE: u32 = 80;
+
 impl Component for CreatePage {
     type Message = Msg;
     type Properties = ();
@@ -36,7 +40,9 @@ impl Component for CreatePage {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if !is_loged_in() {
+        let dispatch = Dispatch::<AppState>::global();
+
+        if dispatch.get().user.is_none() {
             return html! {
                 <Redirect<AppRoute> to={AppRoute::Home}/>
             };
@@ -52,6 +58,17 @@ impl Component for CreatePage {
 
         html! {
             <Layout>
+                <div class="post-title">
+                    <input id="title-input" type="text" placeholder={"Title..."}
+                    value={self.title.clone()}
+                    oninput={ctx.link().callback(|e: InputEvent| {
+                        if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlInputElement>().ok()) {
+                            Msg::UpdateTitle(input.value())
+                        } else {
+                            Msg::Ignore
+                        }
+                    })}/>
+                </div>
                 <div class="create-container">
                     <div class="editor-bar">
                     <div class="clickable" onclick={ctx.link().callback(|_e| Msg::TogglePreview)}>
@@ -73,17 +90,9 @@ impl Component for CreatePage {
                     }
                     else {
                         <div class="md-editor">
-                            <input type="text" placeholder={"Write the title of your article..."}
-                            value={self.title.clone()}
-                            oninput={ctx.link().callback(|e: InputEvent| {
-                                if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlInputElement>().ok()) {
-                                    Msg::UpdateTitle(input.value())
-                                } else {
-                                    Msg::Ignore
-                                }
-                            })}/>
                             <textarea  placeholder={"Write your article here using markdown..."}
                             value={self.content.clone()}
+                            rows={self.content_rows.to_string()}
                             oninput={ctx.link().callback(|e: InputEvent| {
                                 if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlTextAreaElement>().ok()) {
                                     Msg::UpdateContent(input.value())
@@ -102,6 +111,10 @@ impl Component for CreatePage {
         match msg {
             Msg::Ignore => {}
             Msg::UpdateContent(content) => {
+                self.content_rows = 2;
+                for line in content.lines() {
+                    self.content_rows += line.len() as u32 / CHARS_PER_LINE + 1;
+                }
                 self.content = content;
             }
             Msg::UpdateTitle(title) => {
