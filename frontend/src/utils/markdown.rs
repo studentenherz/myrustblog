@@ -72,28 +72,25 @@ pub fn get_headers_and_html_with_ids(html_text: &str) -> (Vec<Header>, String) {
         })
         .collect();
 
-    let parser = parser.iter().map(|event| {
-        let id_map = &id_map;
-        match event {
-            Event::Start(Tag::Heading {
-                level,
-                id,
-                classes,
-                attrs,
-            }) => {
-                let id = id
-                    .clone()
-                    .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
+    let parser = parser.iter().map(|event| match event {
+        Event::Start(Tag::Heading {
+            level,
+            id,
+            classes,
+            attrs,
+        }) => {
+            let id = id
+                .clone()
+                .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
 
-                Event::Start(Tag::Heading {
-                    level: *level,
-                    id,
-                    classes: classes.clone(),
-                    attrs: attrs.clone(),
-                })
-            }
-            _ => event.clone(),
+            Event::Start(Tag::Heading {
+                level: *level,
+                id,
+                classes: classes.clone(),
+                attrs: attrs.clone(),
+            })
         }
+        _ => event.clone(),
     });
 
     let mut html_string = String::new();
