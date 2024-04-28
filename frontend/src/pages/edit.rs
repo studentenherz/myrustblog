@@ -9,33 +9,59 @@ use crate::{
     pages::Layout,
     routes::AppRoute,
     services::api::{ApiError, ApiService},
-    utils::{is_loged_in, set_title, AppState},
+    utils::{set_title, AppState},
 };
 
 #[derive(Debug, Default)]
-pub struct CreatePage {
+struct EditPage {
     title: String,
     content: String,
     preview: bool,
     content_rows: u32,
 }
 
-pub enum Msg {
+enum Msg {
     UpdateTitle(String),
     UpdateContent(String),
-    CreatePost,
-    CreatePostError(ApiError),
+    Publish,
+    PublishError(ApiError),
     TogglePreview,
     Ignore,
 }
 
+#[derive(Properties, PartialEq)]
+struct Props {
+    #[prop_or_default]
+    slug: Option<String>,
+}
+
 const CHARS_PER_LINE: u32 = 80;
 
-impl Component for CreatePage {
+impl Component for EditPage {
     type Message = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        if let Some(slug) = ctx.props().slug.clone() {
+            let update_title_cb = ctx.link().callback(|title| Msg::UpdateTitle(title));
+            let update_content_cb = ctx.link().callback(|content| Msg::UpdateContent(content));
+
+            spawn_local(async move {
+                match ApiService::get_post(&slug).await {
+                    Ok(Some(post)) => {
+                        set_title(&format!("Edit | {}", &post.title));
+                        update_title_cb.emit(post.title);
+                        update_content_cb.emit(post.content);
+                    }
+                    Ok(None) => yew_router::history::BrowserHistory::new()
+                        .replace(AppRoute::NotFound.to_path()),
+                    Err(_) => {
+                        log::error!("Error")
+                    }
+                }
+            });
+        }
+
         Self::default()
     }
 
@@ -80,7 +106,7 @@ impl Component for CreatePage {
                             }
                             </div>
                         <button disabled={self.title.is_empty() || self.content.is_empty()}
-                            onclick={ctx.link().callback(|_| Msg::CreatePost)}
+                            onclick={ctx.link().callback(|_| Msg::Publish)}
                         > { "Publish" } </button>
                     </div>
                     if self.preview {
@@ -124,14 +150,19 @@ impl Component for CreatePage {
             Msg::TogglePreview => {
                 self.preview = !self.preview;
             }
-            Msg::CreatePost => {
+            Msg::Publish => {
                 let title = self.title.clone();
                 let content = self.content.clone();
+                let slug = ctx.props().slug.clone();
 
-                let api_error_cb = ctx.link().callback(|err| Msg::CreatePostError(err));
+                let api_error_cb = ctx.link().callback(|err| Msg::PublishError(err));
 
                 spawn_local(async move {
-                    match ApiService::create_post(&title, &content).await {
+                    match if let Some(slug) = slug {
+                        ApiService::_update_post(&slug, &content).await
+                    } else {
+                        ApiService::create_post(&title, &content).await
+                    } {
                         Ok(slug) => {
                             yew_router::history::BrowserHistory::new()
                                 .push(AppRoute::Post { slug }.to_path());
@@ -140,11 +171,30 @@ impl Component for CreatePage {
                     }
                 });
             }
-            Msg::CreatePostError(err) => {
+            Msg::PublishError(err) => {
                 log::error!("{:?}", err);
             }
         }
 
         true
+    }
+}
+
+#[function_component(CreatePost)]
+pub fn create_post() -> Html {
+    html! {
+        <EditPage />
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct EditProps {
+    pub slug: String,
+}
+
+#[function_component(EditPost)]
+pub fn edit_post(EditProps { slug }: &EditProps) -> Html {
+    html! {
+        <EditPage slug={Some(slug.clone())} />
     }
 }

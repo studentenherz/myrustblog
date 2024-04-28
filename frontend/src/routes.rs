@@ -18,4 +18,6 @@ pub enum AppRoute {
     NotFound,
     #[at("/create")]
     Create,
+    #[at("/edit/:slug")]
+    Edit { slug: String },
 }

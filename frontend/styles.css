@@ -304,10 +304,11 @@ button, .button {
         h1, h2, h3, h4 {
             padding-top: var(--spacing);
 
-            >:first-child {
-                padding-top: 0;
-                margin-top: 0;
-            }
+        }
+
+        >:first-child {
+            padding-top: 0;
+            margin-top: 0;
         }
     }
 
@@ -315,9 +316,13 @@ button, .button {
         grid-column: 2 / span 7;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 20px;
-        padding: 40px 20px;
+        padding: 40px 0px;
+
+        a {
+            color: var(--parenthesis-color);
+        }
     }
 
     .content-table {

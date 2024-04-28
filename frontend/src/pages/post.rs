@@ -98,12 +98,12 @@ impl Component for PostPage {
                         if let Some(User{username: _, role}) = &self.state.user {
                             if role == "Admin" ||  role == "Editor" {
                                 <div class="post-edit-bar">
-                                    <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
-                                        <i class="fa-regular fa-pen-to-square icon"></i> { "Edit" }
+                                    <Link<AppRoute> classes="clickable" to={AppRoute::Edit { slug: self.post.slug.clone() }}>
+                                        <i class="fa-regular fa-pen-to-square icon"></i> { "Edit this post" }
                                     </Link<AppRoute>>
-                                    <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
-                                        <i class="fa-solid fa-trash icon"></i> { "Delete" }
-                                    </Link<AppRoute>>
+                                    // <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
+                                    //     <i class="fa-solid fa-trash icon"></i> { "Delete" }
+                                    // </Link<AppRoute>>
                                 </div>
                             }
                         }

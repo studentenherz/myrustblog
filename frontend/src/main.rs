@@ -29,7 +29,8 @@ fn switch(routes: AppRoute) -> Html {
         AppRoute::Blog => html! { <Blog /> },
         AppRoute::Post { slug } => html! { <PostPage slug={slug} /> },
         AppRoute::NotFound => html! { <h1> { "404 - Not Found" } </h1> },
-        AppRoute::Create => html! { <CreatePage /> },
+        AppRoute::Create => html! { <CreatePost /> },
+        AppRoute::Edit { slug } => html! { <EditPost slug={slug} /> },
     }
 }
 
