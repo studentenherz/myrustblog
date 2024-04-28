@@ -186,6 +186,7 @@ button, .button {
     &:not([disabled]):hover{
         cursor: pointer;
         text-decoration: none;
+        border-color: var(--parenthesis-color);
     }
 }
 
