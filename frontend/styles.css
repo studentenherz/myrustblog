@@ -185,7 +185,6 @@ button, .button {
 
     &:not([disabled]):hover{
         cursor: pointer;
-        border: 1px solid var(--parenthesis-color);
         text-decoration: none;
     }
 }
@@ -305,6 +304,15 @@ button, .button {
         h1, h2, h3, h4 {
             padding-top: var(--spacing);
         }
+    }
+
+    .post-edit-bar {
+        grid-column: 2 / span 7;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 20px;
+        padding: 40px 20px;
     }
 
     .content-table {

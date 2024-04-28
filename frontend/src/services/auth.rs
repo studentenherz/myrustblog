@@ -1,9 +1,10 @@
 use gloo_net::http::{Request, RequestBuilder};
 use reqwest::StatusCode;
 use serde::Serialize;
+use yewdux::prelude::*;
 
 use crate::api_url;
-use crate::utils::{cookies::*, get_current_host};
+use crate::utils::*;
 
 use common::LoginResponse;
 
@@ -46,6 +47,8 @@ impl AuthService {
             .send()
             .await;
 
+        let dispatch = Dispatch::<AppState>::global();
+
         if let Ok(response) = result {
             match response.status() {
                 200..=299 => {
@@ -72,6 +75,12 @@ impl AuthService {
                             .is_ok()
                         {
                             log::info!("Successfully loged in!");
+                            dispatch.set(AppState {
+                                user: Some(User {
+                                    username: res.username,
+                                    role: res.role,
+                                }),
+                            });
                             return Ok(());
                         }
                     }
@@ -156,7 +165,11 @@ impl AuthService {
     }
 
     pub fn logout() -> Result<(), AuthError> {
+        let dispatch = Dispatch::<AppState>::global();
+
         if delete_cookie("_token").is_ok() && delete_cookie("_username").is_ok() {
+            dispatch.set(AppState { user: None });
+
             return Ok(());
         }
 

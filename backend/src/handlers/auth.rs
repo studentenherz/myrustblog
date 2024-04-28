@@ -116,8 +116,8 @@ pub async fn login_user<T: DBHandler>(
             if verify(&login_info.password, &user.password).unwrap_or(false) {
                 let max_age: u64 = 60 * 60 * 24;
                 let claims = Claims {
-                    sub: user.username.to_string(),
-                    role: user.role,
+                    sub: user.username.clone(),
+                    role: user.role.clone(),
                     exp: get_expiration(max_age),
                 };
 
@@ -128,7 +128,8 @@ pub async fn login_user<T: DBHandler>(
                 ) {
                     HttpResponse::Ok().json(LoginResponse {
                         token,
-                        username: login_info.username.clone(),
+                        username: user.username,
+                        role: user.role,
                         max_age,
                     })
                 } else {

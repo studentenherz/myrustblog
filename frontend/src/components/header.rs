@@ -3,11 +3,14 @@ use wasm_bindgen::JsCast;
 use web_sys::{window, Window};
 use yew::prelude::*;
 use yew_router::prelude::*;
+use yewdux::use_store;
 
-use crate::{routes::AppRoute, services::auth::AuthService, utils::loged_in_as};
+use crate::{routes::AppRoute, services::auth::AuthService, utils::*};
 
 #[function_component(Header)]
 pub fn header() -> Html {
+    let (state, _dispatch) = use_store::<AppState>();
+
     let logout = |_| match AuthService::logout() {
         Ok(_) => {
             info!("Loged out");
@@ -36,8 +39,12 @@ pub fn header() -> Html {
                 <Link<AppRoute> to={AppRoute::Blog}> { "Blog" } </Link<AppRoute>>
                 <div> { "|" }</div>
                 <div class="header-user">
-                    if let Some(username) = loged_in_as() {
-                        <Link<AppRoute> classes="clickable" to={AppRoute::Create}> <i class="fa-regular fa-pen-to-square icon"></i> { "Create" } </Link<AppRoute>>
+                    if let Some(User {username, role }) = &state.user {
+                        if role == "Admin" || role == "Editor" {
+                            <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
+                                <i class="fa-regular fa-pen-to-square icon"></i> { "Create" }
+                            </Link<AppRoute>>
+                        }
                         <div>{ username }</div>
                         <button onclick={ logout }> { "Logout" } </button>
                     }

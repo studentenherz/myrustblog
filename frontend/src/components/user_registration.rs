@@ -2,12 +2,13 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{wasm_bindgen::JsCast, HtmlInputElement};
 use yew::prelude::*;
 use yew_router::prelude::*;
+use yewdux::Dispatch;
 
 use crate::{
     components::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
     services::auth::{AuthError, AuthService},
-    utils::is_loged_in,
+    utils::*,
 };
 
 use common::utils::{is_valid_email, is_valid_password, is_valid_username};
@@ -41,7 +42,8 @@ impl Component for UserRegistration {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if is_loged_in() {
+        let state = Dispatch::<AppState>::global().get();
+        if state.user.is_some() {
             return html! {
                 <Redirect<AppRoute> to={AppRoute::Home}/>
             };

@@ -1,24 +1,31 @@
+use std::rc::Rc;
+
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew_router::prelude::*;
 use yew_router::{history::History, Routable};
+use yewdux::prelude::*;
 
 use crate::{
     pages::Layout,
     routes::AppRoute,
     services::api::ApiService,
-    utils::{get_headers_and_html_with_ids, set_title, Header as MyHeader},
+    utils::{get_headers_and_html_with_ids, set_title, AppState, Header as MyHeader, User},
 };
 use common::Post;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct PostPage {
     pub post: Post,
     pub post_content: String,
     pub headers: Vec<MyHeader>,
+    _dispatch: Dispatch<AppState>,
+    state: Rc<AppState>,
 }
 
 pub enum Msg {
     GetPost { post: Post },
+    StateChange(Rc<AppState>),
 }
 
 #[derive(PartialEq, Properties)]
@@ -49,7 +56,16 @@ impl Component for PostPage {
             }
         });
 
-        Self::default()
+        let callback = ctx.link().callback(Msg::StateChange);
+        let dispatch = Dispatch::<AppState>::global().subscribe_silent(callback);
+
+        Self {
+            post: Post::default(),
+            post_content: Default::default(),
+            headers: Default::default(),
+            state: dispatch.get(),
+            _dispatch: dispatch,
+        }
     }
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
@@ -78,6 +94,19 @@ impl Component for PostPage {
                         <div class="post">
                             { Html::from_html_unchecked(self.post_content.clone().into()) }
                         </div>
+
+                        if let Some(User{username: _, role}) = &self.state.user {
+                            if role == "Admin" ||  role == "Editor" {
+                                <div class="post-edit-bar">
+                                    <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
+                                        <i class="fa-regular fa-pen-to-square icon"></i> { "Edit" }
+                                    </Link<AppRoute>>
+                                    <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
+                                        <i class="fa-solid fa-trash icon"></i> { "Delete" }
+                                    </Link<AppRoute>>
+                                </div>
+                            }
+                        }
                     </div>
                 </Layout>
             </>
@@ -90,6 +119,7 @@ impl Component for PostPage {
                 (self.headers, self.post_content) = get_headers_and_html_with_ids(&post.content);
                 self.post = post;
             }
+            Msg::StateChange(state) => self.state = state,
         }
 
         true

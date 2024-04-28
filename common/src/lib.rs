@@ -8,6 +8,7 @@ pub mod utils;
 pub struct LoginResponse {
     pub token: String,
     pub username: String,
+    pub role: String,
     pub max_age: u64,
 }
 
