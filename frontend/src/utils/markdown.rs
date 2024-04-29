@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::min, collections::HashMap};
 
 use pulldown_cmark::{html, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
@@ -97,4 +97,34 @@ pub fn get_headers_and_html_with_ids(html_text: &str) -> (Vec<Header>, String) {
     html::push_html(&mut html_string, parser);
 
     (headers, html_string)
+}
+
+pub fn get_summary(html_text: &str, max_len: usize) -> String {
+    let mut summary = String::new();
+
+    let parser = Parser::new_ext(
+        html_text,
+        Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+    );
+    let mut in_p = false;
+
+    for event in parser {
+        match event {
+            Event::Start(Tag::Paragraph) => {
+                in_p = true;
+            }
+            Event::End(TagEnd::Paragraph) => {
+                in_p = false;
+            }
+            Event::Text(text) if in_p => {
+                summary += &text[..min(max_len - summary.len(), text.len())];
+                if summary.len() >= max_len {
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    summary
 }
