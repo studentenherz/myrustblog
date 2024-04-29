@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
+            .wrap(actix_web::middleware::Compress::default())
             .app_data(Data::new(db_handler.clone())) // MongoDB client
             .app_data(Data::new(emailer.clone())) // Emailer service
             .app_data(Data::new(config.clone())) // Config env variables
