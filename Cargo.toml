@@ -2,3 +2,15 @@
 members = ["backend", "frontend", "common"]
 default-members = ["backend"]
 resolver = "2"
+
+
+[profile.release]
+panic = 'abort'
+codegen-units = 1
+opt-level = 'z'
+lto = true
+
+[profile.backend-release]
+inherits = "release"
+opt-level = 3
+panic = "unwind"

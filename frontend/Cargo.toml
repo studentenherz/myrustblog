@@ -13,7 +13,9 @@ dotenv = "0.15.0"
 common = { path = "../common" }
 gloo-net = "0.5.0"
 log = "0.4.20"
-pulldown-cmark = { version = "0.10.2", default-features = false, features = ["html"] }
+pulldown-cmark = { version = "0.10.2", default-features = false, features = [
+    "html",
+] }
 reqwest = { version = "0.12.3", default-features = false }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.115"
