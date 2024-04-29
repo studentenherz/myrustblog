@@ -19,3 +19,19 @@ pub fn set_title(title: &str) -> bool {
 
     false
 }
+
+pub fn set_description_meta_tag(description: &str) -> bool {
+    if let Some(window) = window() {
+        if let Some(document) = window.document() {
+            if let Some(head) = document.head() {
+                if let Ok(node) = document.create_element("meta") {
+                    let _ = node.set_attribute("name", "description");
+                    let _ = node.set_attribute("content", description);
+                    return head.append_child(&node).is_ok();
+                }
+            }
+        }
+    }
+
+    false
+}

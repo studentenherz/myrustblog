@@ -1,7 +1,10 @@
 use pulldown_cmark::{html::push_html, Parser};
 use yew::prelude::*;
 
-use crate::{pages::Layout, utils::set_title};
+use crate::{
+    pages::Layout,
+    utils::{set_description_meta_tag, set_title},
+};
 
 #[derive(Debug, Default)]
 pub struct Home {
@@ -16,6 +19,11 @@ impl Component for Home {
 
     fn create(_ctx: &Context<Self>) -> Self {
         set_title("Home");
+        set_description_meta_tag(
+            "This is a blog webapp built a a Rust fullstack. The backend is made with
+            [Actix Web](https://actix.rs/) and the frontend with [Yew](https://yew.rs).
+            I'm also using [MongoDB](https://www.mongodb.com/) as the main database.",
+        );
 
         Self {
             content: include_str!("../../../README.md").to_string(),

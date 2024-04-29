@@ -6,6 +6,7 @@ use yew_router::prelude::*;
 use yew_router::{history::History, Routable};
 use yewdux::prelude::*;
 
+use crate::utils::{get_summary, set_description_meta_tag};
 use crate::{
     pages::Layout,
     routes::AppRoute,
@@ -44,6 +45,8 @@ impl Component for PostPage {
         spawn_local(async move {
             match ApiService::get_post(&slug).await {
                 Ok(Some(post)) => {
+                    let summary = get_summary(&post.content, 200);
+                    set_description_meta_tag(&summary);
                     set_title(&format!("Blog | {}", &post.title));
                     get_post_cb.emit(post);
                 }
