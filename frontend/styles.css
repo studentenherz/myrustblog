@@ -4,7 +4,9 @@
     --footer-height: 200px;
     --max-with-central-content: 95rem;
     --dark-bg-color: #292828;
+    --dark-code-bg-color: #333333;
     --dark-fg-color: #d4be98;
+    --dark-fg-color-dim:#d4be9886;
     --dark-secondary-fg-color: #a89984;
     --parenthesis-color: #ea6962;
     --link-color: #89b482;
@@ -558,4 +560,33 @@ time {
 .footnote-definition {
     display: flex;
     gap: 2px;
+}
+
+code {
+    background-color: var(--dark-code-bg-color);
+    padding: 0.2em 0.4em;
+    border-radius: 0.5em;
+}
+
+pre:has(> code) {
+    background-color: var(--dark-code-bg-color);
+    padding: 1rem;
+
+    code {
+        padding: 0;
+    }
+}
+
+table {
+    border-spacing: 0;
+    border-collapse: collapse;
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow: auto;
+
+    th, td {
+        padding: 6px 13px;
+        border: 1px solid var(--dark-fg-color-dim);
+    }
 }
