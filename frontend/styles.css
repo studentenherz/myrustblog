@@ -253,7 +253,7 @@ button, .button {
     }
 }
 
-.date {
+time {
     font-style: italic;
     color: var(--dark-secondary-fg-color);
 }

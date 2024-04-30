@@ -79,7 +79,9 @@ impl Component for PostPage {
                         <h1> { &self.post.title } </h1>
                         <div class="details">
                             <p> { &self.post.author } </p>
-                            <p class="date"> { &self.post.published_at.format("%d %b %Y").to_string() } </p>
+                            <time datetime={self.post.published_at.to_rfc2822()}>
+                                { &self.post.published_at.format("%d %b %Y").to_string() }
+                            </time>
                         </div>
                     </div>
                     <div class={"post-container"}>

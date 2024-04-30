@@ -22,7 +22,7 @@ pub fn post_card(Props { post }: &Props) -> Html {
             <h2> { &post.title } </h2>
             <p class="preview"> { summary } { "..." } </p>
             <div class="lower-strip">
-                <p class="date" > { &post.published_at.format("%d %b %Y").to_string() } </p>
+                <time datetime={post.published_at.to_rfc2822()}> { &post.published_at.format("%d %b %Y").to_string() } </time>
                 <Link<AppRoute> to={AppRoute::Post { slug: post.slug.clone()}} > { "see more..." } </Link<AppRoute>>
             </div>
         </div>
