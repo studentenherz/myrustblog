@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
 use crate::{api_url, services::auth::AuthService};
-use common::{CreatePostRequest, GetPostsResponse, Post, PostCreatedResponse, UpdatePostRequest};
+use common::{
+    CodeBlock, CreatePostRequest, GetPostsResponse, Post, PostCreatedResponse, UpdatePostRequest,
+};
 use gloo_net::http::Request;
 use reqwest::StatusCode;
 
@@ -178,6 +182,38 @@ impl ApiService {
                 x if x.is_success() => {
                     if let Ok(response) = response.json::<GetPostsResponse>().await {
                         return Ok((response.posts, response.pages));
+                    }
+
+                    return Err(ApiError::UnknownResponse);
+                }
+                x if x.is_server_error() => {
+                    return Err(ApiError::ServerInternalError);
+                }
+                StatusCode::UNAUTHORIZED => {
+                    return Err(ApiError::Unauthorized);
+                }
+                _ => {
+                    return Err(ApiError::UnknownError);
+                }
+            }
+        }
+
+        Err(ApiError::RequestError)
+    }
+
+    pub async fn highlight_code(
+        code_blocks: HashMap<String, CodeBlock>,
+    ) -> Result<HashMap<String, String>, ApiError> {
+        if let Ok(response) = Request::post(&api_url!("/highlight/"))
+            .json(&code_blocks)
+            .unwrap()
+            .send()
+            .await
+        {
+            match StatusCode::from_u16(response.status()).unwrap() {
+                x if x.is_success() => {
+                    if let Ok(response) = response.json::<HashMap<String, String>>().await {
+                        return Ok(response);
                     }
 
                     return Err(ApiError::UnknownResponse);

@@ -4,11 +4,8 @@ use log::info;
 use pulldown_cmark::{
     html, CodeBlockKind, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd,
 };
-use syntect::html::{ClassStyle, ClassedHTMLGenerator};
-use syntect::parsing::SyntaxSet;
-use syntect::util::LinesWithEndings;
 
-use common::utils::title_to_slug;
+use common::{utils::title_to_slug, CodeBlock};
 
 #[derive(Debug, PartialEq)]
 pub struct Header {
@@ -17,13 +14,11 @@ pub struct Header {
     pub id: String,
 }
 
-pub fn get_headers_and_html_with_ids(html_text: &str) -> (Vec<Header>, String) {
+pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, CodeBlock>) {
     let parser = Parser::new_ext(
         html_text,
         Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
     );
-
-    let ss = SyntaxSet::load_defaults_newlines();
 
     let mut headers: Vec<Header> = vec![];
     let mut in_header = false;
@@ -81,61 +76,72 @@ pub fn get_headers_and_html_with_ids(html_text: &str) -> (Vec<Header>, String) {
         })
         .collect();
 
+    let mut code_block_idx = 0u32;
     let mut in_codeblock = false;
     let mut lang = "";
-    let parser = parser.iter().map(|event| match event {
-        Event::Start(Tag::Heading {
-            level,
-            id,
-            classes,
-            attrs,
-        }) => {
-            let id = id
-                .clone()
-                .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
+    let mut code_cum = String::new();
+    let mut codeblocks = HashMap::<String, CodeBlock>::new();
+    let parser =
+        parser.iter().filter_map(|event| {
+            info!("{:?}", event);
+            match event {
+                Event::Start(Tag::Heading {
+                    level,
+                    id,
+                    classes,
+                    attrs,
+                }) => {
+                    let id = id
+                        .clone()
+                        .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
 
-            Event::Start(Tag::Heading {
-                level: *level,
-                id,
-                classes: classes.clone(),
-                attrs: attrs.clone(),
-            })
-        }
-        Event::Start(Tag::CodeBlock(cb)) => {
-            in_codeblock = true;
-            lang = match cb {
-                CodeBlockKind::Indented => "",
-                CodeBlockKind::Fenced(lng) => lng,
-            };
-            event.clone()
-        }
-        Event::Text(code_text) if in_codeblock => {
-            if let Some(sr_rs) = ss.find_syntax_by_extension(lang) {
-                let mut rs_html_generator =
-                    ClassedHTMLGenerator::new_with_class_style(sr_rs, &ss, ClassStyle::Spaced);
-                for line in LinesWithEndings::from(code_text) {
-                    rs_html_generator
-                        .parse_html_for_line_which_includes_newline(line)
-                        .unwrap();
+                    Some(Event::Start(Tag::Heading {
+                        level: *level,
+                        id,
+                        classes: classes.clone(),
+                        attrs: attrs.clone(),
+                    }))
                 }
-                let html_rs = rs_html_generator.finalize();
+                Event::Start(Tag::CodeBlock(cb)) => {
+                    in_codeblock = true;
+                    code_block_idx += 1;
+                    lang = match cb {
+                        CodeBlockKind::Indented => "",
+                        CodeBlockKind::Fenced(lng) => lng,
+                    };
+                    None
+                }
+                Event::Text(code_text) if in_codeblock => {
+                    code_cum.push_str(&code_text);
+                    None
+                }
+                Event::End(TagEnd::CodeBlock) => {
+                    in_codeblock = false;
+                    let id = format!("codeblock-id-{code_block_idx}");
+                    codeblocks.insert(
+                        id.clone(),
+                        CodeBlock {
+                            lang: lang.to_string(),
+                            code: code_cum.clone(),
+                        },
+                    );
 
-                Event::Html(html_rs.into())
-            } else {
-                event.clone()
+                    let code_in_html_event = Some(Event::Html(
+                format!(r#"<pre id="{id}"><code class="language-{lang}">{code_cum}</code></pre>"#)
+                    .into(),
+            ));
+
+                    code_cum.clear();
+                    code_in_html_event
+                }
+                _ => Some(event.clone()),
             }
-        }
-        Event::End(TagEnd::CodeBlock) => {
-            in_codeblock = false;
-            event.clone()
-        }
-        _ => event.clone(),
-    });
+        });
 
     let mut html_string = String::new();
     html::push_html(&mut html_string, parser);
 
-    (headers, html_string)
+    (headers, html_string, codeblocks)
 }
 
 pub fn get_summary(html_text: &str, max_len: usize) -> String {

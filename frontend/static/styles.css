@@ -571,6 +571,8 @@ code {
 pre:has(> code) {
     background-color: var(--dark-code-bg-color);
     padding: 1rem;
+    font-size: large;
+    overflow-x: scroll;
 
     code {
         padding: 0;

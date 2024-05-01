@@ -1,6 +1,9 @@
+use std::collections::HashMap;
 use std::rc::Rc;
 
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
+use web_sys::{window, Document, HtmlElement};
 use yew::prelude::*;
 use yew_router::prelude::*;
 use yew_router::{history::History, Routable};
@@ -11,9 +14,9 @@ use crate::{
     pages::Layout,
     routes::AppRoute,
     services::api::ApiService,
-    utils::{get_headers_and_html_with_ids, set_title, AppState, Header as MyHeader, User},
+    utils::{parse_markdown, set_title, AppState, Header as MyHeader, User},
 };
-use common::Post;
+use common::{CodeBlock, Post};
 
 #[derive(Debug)]
 pub struct PostPage {
@@ -25,8 +28,13 @@ pub struct PostPage {
 }
 
 pub enum Msg {
-    GetPost { post: Post },
+    GetPost {
+        post: Post,
+    },
     StateChange(Rc<AppState>),
+    HighlightCode {
+        highlighted: HashMap<String, String>,
+    },
 }
 
 #[derive(PartialEq, Properties)]
@@ -118,13 +126,43 @@ impl Component for PostPage {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::GetPost { post } => {
-                (self.headers, self.post_content) = get_headers_and_html_with_ids(&post.content);
+                let (headers, post_content, codeblocks) = parse_markdown(&post.content);
+                self.headers = headers;
+                self.post_content = post_content;
                 self.post = post;
+
+                let highlight_cb = ctx
+                    .link()
+                    .callback(|highlighted| Msg::HighlightCode { highlighted });
+
+                spawn_local(async move {
+                    match ApiService::highlight_code(codeblocks).await {
+                        Ok(highlighted) => {
+                            highlight_cb.emit(highlighted);
+                        }
+                        Err(_) => {
+                            log::error!("Error")
+                        }
+                    }
+                });
             }
             Msg::StateChange(state) => self.state = state,
+            Msg::HighlightCode { highlighted } => {
+                if let Some(window) = window() {
+                    if let Some(document) = window.document() {
+                        for (id, code) in highlighted.iter() {
+                            if let Some(element) = document.get_element_by_id(&id) {
+                                if let Ok(html_element) = element.dyn_into::<HtmlElement>() {
+                                    html_element.set_inner_html(code);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         true

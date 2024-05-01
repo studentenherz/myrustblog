@@ -54,3 +54,9 @@ pub struct GetPostsResponse {
     pub posts: Vec<Post>,
     pub pages: Result<u64, ()>,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct CodeBlock {
+    pub lang: String,
+    pub code: String,
+}

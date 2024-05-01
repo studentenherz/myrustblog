@@ -18,6 +18,7 @@ use database::mongo::MongoDBHandler;
 use dotenv::dotenv;
 use middlewares::authorization;
 use services::email::Emailer;
+use utils::Highlighter;
 
 create_env_struct! {
     Config {
@@ -53,6 +54,8 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Connection test with SMTP server failed");
 
+    let highlighter = Highlighter::new();
+
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default()) // Logs every request
@@ -70,6 +73,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(db_handler.clone())) // MongoDB client
             .app_data(Data::new(emailer.clone())) // Emailer service
             .app_data(Data::new(config.clone())) // Config env variables
+            .app_data(Data::new(highlighter.clone()))
             .service(
                 web::scope("/api")
                     .service(
@@ -118,6 +122,12 @@ async fn main() -> std::io::Result<()> {
                                         ),
                                     ),
                             ),
+                    )
+                    .service(
+                        web::scope("/highlight").service(
+                            web::resource("/")
+                                .route(web::post().to(handlers::syntax_highlight::highlight_code)),
+                        ),
                     ),
             )
             .service(
