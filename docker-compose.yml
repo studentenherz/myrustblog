@@ -1,6 +1,7 @@
 services:
   mongodb:
     image: mongo:latest
+    restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -11,6 +12,7 @@ services:
 
   website:
     image: myrustblog:latest
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
