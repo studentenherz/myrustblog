@@ -18,6 +18,7 @@ pub enum AuthError {
     ConfirmationError,
     RegistrationConflict(String),
     LogoutError,
+    ExpiredSession,
 }
 
 #[derive(Serialize)]
@@ -40,6 +41,17 @@ struct UserConfirmation<'a> {
 }
 
 impl AuthService {
+    fn get_token() -> Result<String, AuthError> {
+        match get_cookie("_token") {
+            Some(auth_token) => Ok(auth_token),
+            None => {
+                let dispatch = Dispatch::<AppState>::global();
+                dispatch.set(AppState { user: None });
+                Err(AuthError::ExpiredSession)
+            }
+        }
+    }
+
     pub async fn login(username: &str, password: &str) -> Result<(), AuthError> {
         let result = Request::post(&api_url!("/auth/login"))
             .json(&LoginForm { username, password })
@@ -177,7 +189,7 @@ impl AuthService {
     }
 
     pub fn _protected_get(url: &str) -> Result<RequestBuilder, AuthError> {
-        if let Some(auth_token) = get_cookie("_token") {
+        if let Ok(auth_token) = Self::get_token() {
             Ok(Request::get(url).header(
                 reqwest::header::AUTHORIZATION.as_str(),
                 &format!("Bearer {}", auth_token),
@@ -188,7 +200,7 @@ impl AuthService {
     }
 
     pub fn protected_post(url: &str) -> Result<RequestBuilder, AuthError> {
-        if let Some(auth_token) = get_cookie("_token") {
+        if let Ok(auth_token) = Self::get_token() {
             Ok(Request::post(url).header(
                 reqwest::header::AUTHORIZATION.as_str(),
                 &format!("Bearer {}", auth_token),
@@ -199,7 +211,7 @@ impl AuthService {
     }
 
     pub fn _protected_delete(url: &str) -> Result<RequestBuilder, AuthError> {
-        if let Some(auth_token) = get_cookie("_token") {
+        if let Ok(auth_token) = Self::get_token() {
             Ok(Request::delete(url).header(
                 reqwest::header::AUTHORIZATION.as_str(),
                 &format!("Bearer {}", auth_token),
