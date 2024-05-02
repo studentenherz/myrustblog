@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{window, Document, HtmlElement};
+use web_sys::{window, HtmlElement};
 use yew::prelude::*;
 use yew_router::prelude::*;
 use yew_router::{history::History, Routable};
@@ -16,7 +16,7 @@ use crate::{
     services::api::ApiService,
     utils::{parse_markdown, set_title, AppState, Header as MyHeader, User},
 };
-use common::{CodeBlock, Post};
+use common::Post;
 
 #[derive(Debug)]
 pub struct PostPage {
