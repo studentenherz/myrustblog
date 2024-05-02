@@ -303,10 +303,15 @@ time {
 
     .post {
         grid-column: 2 / span 7;
+        font-size: large;
 
         h1, h2, h3, h4 {
             padding-top: var(--spacing);
+            margin-top: 0;
+        }
 
+        p {
+            margin-bottom: 0;
         }
 
         >:first-child:not(pre) {
@@ -345,6 +350,22 @@ time {
             font-size: large;
             padding-top: 0;
             margin-top: 0;
+        }
+
+        .header-H2 {
+            margin-left: 2ch;
+        }
+        .header-H3 {
+            margin-left: 4ch;
+        }
+        .header-H4 {
+            margin-left: 6ch;
+        }
+        .header-H5 {
+            margin-left: 8ch;
+        }
+        .header-H6 {
+            margin-left: 10ch;
         }
 
         ul {
@@ -558,6 +579,11 @@ time {
 }
 
 .footnote-definition {
+
+    &:first-of-type {
+        padding-top: calc(var(--spacing) * 2);
+    }
+
     display: flex;
     gap: 2px;
 }
@@ -568,14 +594,24 @@ code {
     border-radius: 0.5em;
 }
 
-pre:has(> code) {
-    background-color: var(--dark-code-bg-color);
-    padding: 1rem;
+pre:has(code) {
     font-size: large;
     overflow-x: scroll;
+    display: flex;
+    flex-direction: column;
 
     code {
-        padding: 0;
+        padding: 1rem;
+        background-color: var(--dark-code-bg-color);
+        border-radius: 0 0.5em 0.5em 0.5em;
+    }
+
+    span.language-tag {
+        width: fit-content;
+        background-color: var(--dark-code-bg-color);
+        padding: 0.5rem 1rem;
+        padding-bottom: 0;
+        border-radius: 0.5em 0.5em 0 0;
     }
 }
 
