@@ -2,7 +2,7 @@
     --info-background: #d1eff7;
     --footer-top-margin: 50px;
     --footer-height: 200px;
-    --max-with-central-content: 95rem;
+    --max-with-central-content: 1520px;
     --dark-bg-color: #292828;
     --dark-code-bg-color: #333333;
     --dark-fg-color: #d4be98;
@@ -300,10 +300,10 @@ time {
     grid-auto-flow: column;
     position: relative;
     gap: 0 20px;
+    font-size: large;
 
     .post {
         grid-column: 2 / span 7;
-        font-size: large;
 
         h1, h2, h3, h4 {
             padding-top: var(--spacing);
@@ -596,11 +596,11 @@ code {
 
 pre:has(code) {
     font-size: large;
-    overflow-x: scroll;
     display: flex;
     flex-direction: column;
 
     code {
+        overflow-x: scroll;
         padding: 1rem;
         background-color: var(--dark-code-bg-color);
         border-radius: 0 0.5em 0.5em 0.5em;
@@ -626,5 +626,77 @@ table {
     th, td {
         padding: 6px 13px;
         border: 1px solid var(--dark-fg-color-dim);
+    }
+}
+
+@media only screen and (max-width: 1520px) {
+    .post-container {
+        .content-table {
+            display: none;
+            visibility: hidden;
+        }
+
+        .post {
+            grid-column: 2 / span 10;
+        }
+    }
+
+    .home-container .home {
+        grid-column: 2 / span 10;
+    }
+}
+
+@media only screen and (max-width: 1000px) {
+    header {
+        justify-content: space-around;
+
+        .logo, .username, .separator {
+            display: none;
+            visibility: hidden;
+        }
+    }
+
+    main {
+        padding: 1rem;
+    }
+
+    .post-container {
+        font-size: medium;
+        .post {
+            grid-column: 1 / span 12;
+        }
+    }
+
+    .home-container {
+        font-size: medium;
+        .home {
+            grid-column: 1 / span 12;
+        }
+    }
+
+    .posts-container {
+        grid-column: 1 / span 3;
+        grid-template-columns: 1fr;
+    }
+
+    .posts-container-navigation {
+        grid-column: 1 / span 3;
+        padding: 1rem;
+    }
+
+    .create-container {
+        gap: 0 20px;
+
+        .md-editor, .md-preview {
+            grid-column: 1 / span 12;
+        }
+
+        .editor-bar {
+            grid-column: 1 / span 12;
+            flex-direction: row;
+            justify-content: flex-end;
+            bottom: var(--spacing);
+            background-color: var(--dark-bg-color);
+        }
     }
 }

@@ -38,7 +38,7 @@ pub fn header() -> Html {
                                 <i class="fa-regular fa-pen-to-square icon"></i> { "Create" }
                             </Link<AppRoute>>
                         }
-                        <div>{ username }</div>
+                        <div class="username">{ username }</div>
                         <button onclick={ logout }> { "Logout" } </button>
                     }
                     else {
