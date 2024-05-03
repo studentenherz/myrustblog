@@ -1,10 +1,10 @@
 use std::rc::Rc;
 
-use common::Post;
+use common::{utils::get_summary, Post};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::{routes::AppRoute, utils::get_summary};
+use crate::routes::AppRoute;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {

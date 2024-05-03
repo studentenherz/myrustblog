@@ -9,14 +9,14 @@ use yew_router::prelude::*;
 use yew_router::{history::History, Routable};
 use yewdux::prelude::*;
 
-use crate::utils::{get_summary, set_description_meta_tag};
+use crate::utils::set_description_meta_tag;
 use crate::{
     pages::Layout,
     routes::AppRoute,
     services::api::ApiService,
     utils::{parse_markdown, set_title, AppState, Header as MyHeader, User},
 };
-use common::Post;
+use common::{utils::get_summary, Post};
 
 #[derive(Debug)]
 pub struct PostPage {

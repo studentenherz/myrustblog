@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 bson = { version = "2.10.0", features = ["chrono-0_4"] }
 chrono = { version = "0.4.37", features = ["serde"] }
+pulldown-cmark = { version = "0.10.3", features = ["html"] }
 regex = "1.10.4"
 serde = { version = "1.0.196", features = ["derive"] }
