@@ -27,7 +27,10 @@ create_env_struct! {
         SMTP_SERVER,
         SMTP_USERNAME,
         SMTP_PASSWORD,
-        NEW_USER_DEFAULT_ROLE
+        NEW_USER_DEFAULT_ROLE,
+        WEBSITE_URL,
+        RSS_TITLE,
+        RSS_DESCRIPTION
     }
 }
 
@@ -74,6 +77,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(emailer.clone())) // Emailer service
             .app_data(Data::new(config.clone())) // Config env variables
             .app_data(Data::new(highlighter.clone()))
+            .service(
+                web::resource("/rss")
+                    .route(web::get().to(handlers::rss::rss_feed_handler::<MongoDBHandler>)),
+            )
             .service(
                 web::scope("/api")
                     .service(
