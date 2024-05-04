@@ -345,6 +345,7 @@ time {
     }
 
     .content-table {
+        font-size: medium;
         grid-column: 10 / span 2;
         position: sticky;
         align-self: flex-start;
