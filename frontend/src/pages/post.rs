@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{window, HtmlElement};
+use web_sys::{window, HtmlDialogElement, HtmlElement};
 use yew::prelude::*;
 use yew_router::prelude::*;
 use yew_router::{history::History, Routable};
@@ -35,6 +35,7 @@ pub enum Msg {
     HighlightCode {
         highlighted: HashMap<String, String>,
     },
+    DeletePost,
 }
 
 #[derive(PartialEq, Properties)]
@@ -79,7 +80,7 @@ impl Component for PostPage {
         }
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
                 <Layout>
@@ -114,9 +115,38 @@ impl Component for PostPage {
                                     <Link<AppRoute> classes="clickable" to={AppRoute::Edit { slug: self.post.slug.clone() }}>
                                         <i class="fa-regular fa-pen-to-square icon"></i> { "Edit this post" }
                                     </Link<AppRoute>>
-                                    // <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
-                                    //     <i class="fa-solid fa-trash icon"></i> { "Delete" }
-                                    // </Link<AppRoute>>
+                                    <button class="clickable" onclick={|_| {
+                                        if let Some(window) = window() {
+                                            if let Some(document) = window.document() {
+                                                if let Some(element) = document.get_element_by_id("delete-dialog") {
+                                                    if let Ok(dialog_element) = element.dyn_into::<HtmlDialogElement>() {
+                                                        let _ = dialog_element.show_modal();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }}>
+                                        <i class="fa-solid fa-trash icon"></i> { "Delete" }
+                                    </button>
+                                    <dialog id="delete-dialog">
+                                        { "Are you sure you want to delete this post?" }
+                                        <div>
+                                            <button  onclick={|_| {
+                                                if let Some(window) = window() {
+                                                    if let Some(document) = window.document() {
+                                                        if let Some(element) = document.get_element_by_id("delete-dialog") {
+                                                            if let Ok(dialog_element) = element.dyn_into::<HtmlDialogElement>() {
+                                                                let _ = dialog_element.close();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }}>
+                                                { "Cancel" }
+                                            </button>
+                                            <button id="delete-button" onclick={ctx.link().callback(|_| Msg::DeletePost)}> { "Accept" } </button>
+                                        </div>
+                                    </dialog>
                                 </div>
                             }
                         }
@@ -162,6 +192,20 @@ impl Component for PostPage {
                         }
                     }
                 }
+            }
+            Msg::DeletePost => {
+                let slug = self.post.slug.clone();
+                spawn_local(async move {
+                    match ApiService::_delete_post(&slug).await {
+                        Ok(_) => {
+                            yew_router::history::BrowserHistory::new()
+                                .push(AppRoute::Home.to_path());
+                        }
+                        Err(_) => {
+                            log::error!("Error deleting")
+                        }
+                    }
+                });
             }
         }
 

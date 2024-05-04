@@ -20,6 +20,7 @@ html {
 }
 
 body {
+    font-size: large;
     color: var(--dark-fg-color);
     background-color: var(--dark-bg-color);
     min-height: 100vh;
@@ -328,8 +329,13 @@ time {
         gap: 20px;
         padding: 40px 0px;
 
-        a {
+        a, >button {
             color: var(--parenthesis-color);
+            border: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
         }
     }
 
@@ -697,6 +703,38 @@ table {
             justify-content: flex-end;
             bottom: var(--spacing);
             background-color: var(--dark-bg-color);
+        }
+    }
+}
+
+dialog[open] {
+    color: var(--dark-fg-color);
+    background-color: var(--dark-bg-color);
+    border: 1px solid var(--dark-fg-color-dim);
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    >div {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    &::backdrop{
+        background-color: black;
+        opacity: 0.5;
+    }
+
+    #delete-button {
+        color: var(--parenthesis-color);
+        border-color: var(--parenthesis-color);
+
+        &:hover {
+            color: var(--dark-fg-color);
+            background-color: var(--parenthesis-color);
         }
     }
 }

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use log::info;
 use pulldown_cmark::{
     html, CodeBlockKind, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd,
 };
@@ -81,62 +80,58 @@ pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, 
     let mut lang = "";
     let mut code_cum = String::new();
     let mut codeblocks = HashMap::<String, CodeBlock>::new();
-    let parser =
-        parser.iter().filter_map(|event| {
-            info!("{:?}", event);
-            match event {
-                Event::Start(Tag::Heading {
-                    level,
-                    id,
-                    classes,
-                    attrs,
-                }) => {
-                    let id = id
-                        .clone()
-                        .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
+    let parser = parser.iter().filter_map(|event| match event {
+        Event::Start(Tag::Heading {
+            level,
+            id,
+            classes,
+            attrs,
+        }) => {
+            let id = id
+                .clone()
+                .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
 
-                    Some(Event::Start(Tag::Heading {
-                        level: *level,
-                        id,
-                        classes: classes.clone(),
-                        attrs: attrs.clone(),
-                    }))
-                }
-                Event::Start(Tag::CodeBlock(cb)) => {
-                    in_codeblock = true;
-                    code_block_idx += 1;
-                    lang = match cb {
-                        CodeBlockKind::Indented => "",
-                        CodeBlockKind::Fenced(lng) => lng,
-                    };
-                    None
-                }
-                Event::Text(code_text) if in_codeblock => {
-                    code_cum.push_str(&code_text);
-                    None
-                }
-                Event::End(TagEnd::CodeBlock) => {
-                    in_codeblock = false;
-                    let id = format!("codeblock-id-{code_block_idx}");
-                    codeblocks.insert(
-                        id.clone(),
-                        CodeBlock {
-                            lang: lang.to_string(),
-                            code: code_cum.clone(),
-                        },
-                    );
+            Some(Event::Start(Tag::Heading {
+                level: *level,
+                id,
+                classes: classes.clone(),
+                attrs: attrs.clone(),
+            }))
+        }
+        Event::Start(Tag::CodeBlock(cb)) => {
+            in_codeblock = true;
+            code_block_idx += 1;
+            lang = match cb {
+                CodeBlockKind::Indented => "",
+                CodeBlockKind::Fenced(lng) => lng,
+            };
+            None
+        }
+        Event::Text(code_text) if in_codeblock => {
+            code_cum.push_str(&code_text);
+            None
+        }
+        Event::End(TagEnd::CodeBlock) => {
+            in_codeblock = false;
+            let id = format!("codeblock-id-{code_block_idx}");
+            codeblocks.insert(
+                id.clone(),
+                CodeBlock {
+                    lang: lang.to_string(),
+                    code: code_cum.clone(),
+                },
+            );
 
-                    let code_in_html_event = Some(Event::Html(
+            let code_in_html_event = Some(Event::Html(
                 format!(r#"<pre id="{id}"><code class="language-{lang}">{code_cum}</code></pre>"#)
                     .into(),
             ));
 
-                    code_cum.clear();
-                    code_in_html_event
-                }
-                _ => Some(event.clone()),
-            }
-        });
+            code_cum.clear();
+            code_in_html_event
+        }
+        _ => Some(event.clone()),
+    });
 
     let mut html_string = String::new();
     html::push_html(&mut html_string, parser);
