@@ -16,7 +16,7 @@ pub async fn highlight_code(
             format!(
                 r#"<span class="language-tag">.{lang}</span><code class="language-{lang}">{}</code>"#,
                 highlighter
-                    .parse_html_with_class_style_with_code_extension(&code, &lang)
+                    .parse_html_with_class_style_with_code_extension(code, lang)
                     .unwrap_or(code.clone())
             ),
         );

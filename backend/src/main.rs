@@ -1,7 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{
     http::header,
-    middleware::{Logger, NormalizePath, TrailingSlash},
+    middleware::{Logger, NormalizePath},
     web::{self, Data},
     App, HttpServer,
 };
@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default()) // Logs every request
-            .wrap(NormalizePath::new(TrailingSlash::MergeOnly))
+            .wrap(NormalizePath::trim())
             .wrap(
                 Cors::default()
                     .allowed_origin("http://127.0.0.1:8080")
@@ -77,65 +77,52 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(emailer.clone())) // Emailer service
             .app_data(Data::new(config.clone())) // Config env variables
             .app_data(Data::new(highlighter.clone()))
-            .service(
-                web::resource("/rss")
-                    .route(web::get().to(handlers::rss::rss_feed_handler::<MongoDBHandler>)),
-            )
+            .service(web::resource("/rss").get(handlers::rss_feed_handler::<MongoDBHandler>))
             .service(
                 web::scope("/api")
                     .service(
                         web::scope("/auth")
-                            .service(web::resource("/register").route(
-                                web::post().to(handlers::auth::register_user::<MongoDBHandler>),
-                            ))
-                            .service(web::resource("/confirm").route(
-                                web::post().to(handlers::auth::confirm_user::<MongoDBHandler>),
-                            ))
-                            .service(web::resource("/login").route(
-                                web::post().to(handlers::auth::login_user::<MongoDBHandler>),
-                            )),
+                            .service(
+                                web::resource("/register")
+                                    .post(handlers::register_user::<MongoDBHandler>),
+                            )
+                            .service(
+                                web::resource("/confirm")
+                                    .post(handlers::confirm_user::<MongoDBHandler>),
+                            )
+                            .service(
+                                web::resource("/login")
+                                    .post(handlers::login_user::<MongoDBHandler>),
+                            ),
                     )
                     .service(
                         web::scope("/post")
                             .service(
-                                web::resource("/get-list").route(
-                                    web::get().to(handlers::post::get_posts::<MongoDBHandler>),
-                                ),
+                                web::resource("/get-list")
+                                    .get(handlers::get_posts::<MongoDBHandler>),
                             )
                             .service(
-                                web::resource("/read/{slug}").route(
-                                    web::get().to(handlers::post::get_post::<MongoDBHandler>),
-                                ),
+                                web::resource("/read/{slug}")
+                                    .get(handlers::get_post::<MongoDBHandler>),
                             )
                             .service(
                                 web::scope("")
                                     .wrap(authorization::Authorization::new(&config.JWT_SECRET))
                                     .service(
-                                        web::resource("/create").route(
-                                            web::post()
-                                                .to(handlers::post::create_post::<MongoDBHandler>),
-                                        ),
+                                        web::resource("/create")
+                                            .post(handlers::create_post::<MongoDBHandler>),
                                     )
                                     .service(
-                                        web::resource("/update").route(
-                                            web::post()
-                                                .to(handlers::post::update_post::<MongoDBHandler>),
-                                        ),
+                                        web::resource("/update")
+                                            .post(handlers::update_post::<MongoDBHandler>),
                                     )
                                     .service(
-                                        web::resource("/delete/{slug}").route(
-                                            web::delete()
-                                                .to(handlers::post::delete_post::<MongoDBHandler>),
-                                        ),
+                                        web::resource("/delete/{slug}")
+                                            .delete(handlers::delete_post::<MongoDBHandler>),
                                     ),
                             ),
                     )
-                    .service(
-                        web::scope("/highlight").service(
-                            web::resource("/")
-                                .route(web::post().to(handlers::syntax_highlight::highlight_code)),
-                        ),
-                    ),
+                    .service(web::resource("/highlight").post(handlers::highlight_code)),
             )
             .service(
                 spa()
