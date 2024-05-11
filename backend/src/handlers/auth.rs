@@ -1,20 +1,16 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-use actix_web::{web, HttpResponse, Responder};
+use actix_identity::Identity;
+use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Responder};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
-use jsonwebtoken::{encode, EncodingKey, Header};
 
 use crate::{
     database::DBHandler,
-    models::{
-        Claims, UnconfirmedUser, UserConfirmation, UserLogin as UserLoginForm, UserRegistration,
-    },
+    models::{UnconfirmedUser, UserConfirmation, UserLogin as UserLoginForm, UserRegistration},
     services::email::Emailer,
     utils::generate_random_alphanumeric_str,
     Config,
 };
-use common::{utils::*, LoginResponse};
+use common::utils::*;
 
 pub async fn register_user<T: DBHandler>(
     db_handler: web::Data<T>,
@@ -108,51 +104,27 @@ pub async fn confirm_user<T: DBHandler>(
 
 pub async fn login_user<T: DBHandler>(
     db_handler: web::Data<T>,
-    config: web::Data<Config>,
     login_info: web::Json<UserLoginForm>,
+    request: HttpRequest,
 ) -> impl Responder {
     match db_handler.find_user(&login_info.username).await {
         Ok(Some(user)) => {
             if verify(&login_info.password, &user.password).unwrap_or(false) {
-                let max_age: u64 = 60 * 60 * 24;
-                let claims = Claims {
-                    sub: user.username.clone(),
-                    role: user.role.clone(),
-                    exp: get_expiration(max_age),
-                };
-
-                if let Ok(token) = encode(
-                    &Header::default(),
-                    &claims,
-                    &EncodingKey::from_secret(config.JWT_SECRET.as_ref()),
-                ) {
-                    HttpResponse::Ok().json(LoginResponse {
-                        token,
-                        username: user.username,
-                        role: user.role,
-                        max_age,
-                    })
+                if Identity::login(&request.extensions(), login_info.username.clone()).is_ok() {
+                    HttpResponse::Ok()
                 } else {
-                    HttpResponse::InternalServerError().finish()
+                    HttpResponse::InternalServerError()
                 }
             } else {
-                HttpResponse::Unauthorized().finish()
+                HttpResponse::Unauthorized()
             }
         }
-        Ok(None) => HttpResponse::Unauthorized().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Ok(None) => HttpResponse::Unauthorized(),
+        Err(_) => HttpResponse::InternalServerError(),
     }
 }
 
-fn get_expiration(seconds_from_now: u64) -> usize {
-    let now = SystemTime::now();
-
-    let expiration_time = now
-        .checked_add(Duration::from_secs(seconds_from_now))
-        .expect("Failed to calculate expiration time");
-
-    expiration_time
-        .duration_since(UNIX_EPOCH)
-        .expect("Failed to convert to Unix timestamp")
-        .as_secs() as usize
+pub async fn logout_user(user: Identity) -> impl Responder {
+    user.logout();
+    HttpResponse::Ok()
 }

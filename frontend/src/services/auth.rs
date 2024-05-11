@@ -6,19 +6,15 @@ use yewdux::prelude::*;
 use crate::api_url;
 use crate::utils::*;
 
-use common::LoginResponse;
-
 pub struct AuthService;
 
 pub enum AuthError {
     NetworkError,
-    AuthenticationError,
     LoginError(String),
     RegistrationError,
     ConfirmationError,
     RegistrationConflict(String),
     LogoutError,
-    ExpiredSession,
 }
 
 #[derive(Serialize)]
@@ -41,17 +37,6 @@ struct UserConfirmation<'a> {
 }
 
 impl AuthService {
-    fn get_token() -> Result<String, AuthError> {
-        match get_cookie("_token") {
-            Some(auth_token) => Ok(auth_token),
-            None => {
-                let dispatch = Dispatch::<AppState>::global();
-                dispatch.set(AppState { user: None });
-                Err(AuthError::ExpiredSession)
-            }
-        }
-    }
-
     pub async fn login(username: &str, password: &str) -> Result<(), AuthError> {
         let result = Request::post(&api_url!("/auth/login"))
             .json(&LoginForm { username, password })
@@ -64,38 +49,14 @@ impl AuthService {
         if let Ok(response) = result {
             match response.status() {
                 200..=299 => {
-                    if let Ok(res) = response.json::<LoginResponse>().await {
-                        if set_cookie_with_attributes(
-                            "_token",
-                            &res.token,
-                            CookieAttributes::new()
-                                .max_age(res.max_age)
-                                .path("/")
-                                .same_site_strict()
-                                .secure(),
-                        )
-                        .is_ok()
-                            && set_cookie_with_attributes(
-                                "_username",
-                                &res.username,
-                                CookieAttributes::new()
-                                    .max_age(res.max_age)
-                                    .path("/")
-                                    .same_site_strict()
-                                    .secure(),
-                            )
-                            .is_ok()
-                        {
-                            log::info!("Successfully loged in!");
-                            dispatch.set(AppState {
-                                user: Some(User {
-                                    username: res.username,
-                                    role: res.role,
-                                }),
-                            });
-                            return Ok(());
-                        }
-                    }
+                    log::info!("Successfully loged in!");
+                    dispatch.set(AppState {
+                        user: Some(User {
+                            username: username.to_string(),
+                            role: "Admin".to_string(),
+                        }),
+                    });
+                    return Ok(());
                 }
                 400..=499 => {
                     return Err(AuthError::LoginError(
@@ -176,10 +137,12 @@ impl AuthService {
         Err(AuthError::NetworkError)
     }
 
-    pub fn logout() -> Result<(), AuthError> {
+    pub async fn logout() -> Result<(), AuthError> {
+        let result = Request::get(&api_url!("/auth/logout")).send().await;
+
         let dispatch = Dispatch::<AppState>::global();
 
-        if delete_cookie("_token").is_ok() && delete_cookie("_username").is_ok() {
+        if let Ok(_response) = result {
             dispatch.set(AppState { user: None });
 
             return Ok(());
@@ -189,35 +152,14 @@ impl AuthService {
     }
 
     pub fn _protected_get(url: &str) -> Result<RequestBuilder, AuthError> {
-        if let Ok(auth_token) = Self::get_token() {
-            Ok(Request::get(url).header(
-                reqwest::header::AUTHORIZATION.as_str(),
-                &format!("Bearer {}", auth_token),
-            ))
-        } else {
-            Err(AuthError::AuthenticationError)
-        }
+        Ok(Request::get(url))
     }
 
     pub fn protected_post(url: &str) -> Result<RequestBuilder, AuthError> {
-        if let Ok(auth_token) = Self::get_token() {
-            Ok(Request::post(url).header(
-                reqwest::header::AUTHORIZATION.as_str(),
-                &format!("Bearer {}", auth_token),
-            ))
-        } else {
-            Err(AuthError::AuthenticationError)
-        }
+        Ok(Request::post(url))
     }
 
     pub fn _protected_delete(url: &str) -> Result<RequestBuilder, AuthError> {
-        if let Ok(auth_token) = Self::get_token() {
-            Ok(Request::delete(url).header(
-                reqwest::header::AUTHORIZATION.as_str(),
-                &format!("Bearer {}", auth_token),
-            ))
-        } else {
-            Err(AuthError::AuthenticationError)
-        }
+        Ok(Request::delete(url))
     }
 }

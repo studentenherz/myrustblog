@@ -5,14 +5,6 @@ use serde::{Deserialize, Serialize};
 pub mod utils;
 
 #[derive(Deserialize, Serialize)]
-pub struct LoginResponse {
-    pub token: String,
-    pub username: String,
-    pub role: String,
-    pub max_age: u64,
-}
-
-#[derive(Deserialize, Serialize)]
 pub struct CreatePostRequest {
     pub title: String,
     pub content: String,

@@ -1,5 +1,8 @@
 use actix_cors::Cors;
+use actix_identity::IdentityMiddleware;
+use actix_session::{storage::RedisSessionStore, SessionMiddleware};
 use actix_web::{
+    cookie::Key,
     http::header,
     middleware::{Logger, NormalizePath},
     web::{self, Data},
@@ -9,20 +12,17 @@ use actix_web_lab::web::spa;
 
 mod database;
 mod handlers;
-mod middlewares;
 mod models;
 mod services;
 mod utils;
 
 use database::mongo::MongoDBHandler;
 use dotenv::dotenv;
-use middlewares::authorization;
 use services::email::Emailer;
 use utils::Highlighter;
 
 create_env_struct! {
     Config {
-        JWT_SECRET,
         DATABASE_URL,
         SMTP_SERVER,
         SMTP_USERNAME,
@@ -30,7 +30,8 @@ create_env_struct! {
         NEW_USER_DEFAULT_ROLE,
         WEBSITE_URL,
         RSS_TITLE,
-        RSS_DESCRIPTION
+        RSS_DESCRIPTION,
+        REDIS_URL
     }
 }
 
@@ -59,6 +60,11 @@ async fn main() -> std::io::Result<()> {
 
     let highlighter = Highlighter::new();
 
+    let key = Key::generate();
+    let redis_store = RedisSessionStore::new(&config.REDIS_URL)
+        .await
+        .expect("Can't connect to Redis");
+
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default()) // Logs every request
@@ -73,6 +79,8 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600),
             )
             .wrap(actix_web::middleware::Compress::default())
+            .wrap(IdentityMiddleware::default())
+            .wrap(SessionMiddleware::new(redis_store.clone(), key.clone()))
             .app_data(Data::new(db_handler.clone())) // MongoDB client
             .app_data(Data::new(emailer.clone())) // Emailer service
             .app_data(Data::new(config.clone())) // Config env variables
@@ -93,7 +101,8 @@ async fn main() -> std::io::Result<()> {
                             .service(
                                 web::resource("/login")
                                     .post(handlers::login_user::<MongoDBHandler>),
-                            ),
+                            )
+                            .service(web::resource("/logout").get(handlers::logout_user)),
                     )
                     .service(
                         web::scope("/post")
@@ -106,20 +115,16 @@ async fn main() -> std::io::Result<()> {
                                     .get(handlers::get_post::<MongoDBHandler>),
                             )
                             .service(
-                                web::scope("")
-                                    .wrap(authorization::Authorization::new(&config.JWT_SECRET))
-                                    .service(
-                                        web::resource("/create")
-                                            .post(handlers::create_post::<MongoDBHandler>),
-                                    )
-                                    .service(
-                                        web::resource("/update")
-                                            .post(handlers::update_post::<MongoDBHandler>),
-                                    )
-                                    .service(
-                                        web::resource("/delete/{slug}")
-                                            .delete(handlers::delete_post::<MongoDBHandler>),
-                                    ),
+                                web::resource("/create")
+                                    .post(handlers::create_post::<MongoDBHandler>),
+                            )
+                            .service(
+                                web::resource("/update")
+                                    .post(handlers::update_post::<MongoDBHandler>),
+                            )
+                            .service(
+                                web::resource("/delete/{slug}")
+                                    .delete(handlers::delete_post::<MongoDBHandler>),
                             ),
                     )
                     .service(web::resource("/highlight").post(handlers::highlight_code)),

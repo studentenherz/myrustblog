@@ -1,4 +1,5 @@
 use log::info;
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 use yewdux::use_store;
@@ -9,13 +10,17 @@ use crate::{routes::AppRoute, services::auth::AuthService, utils::*};
 pub fn header() -> Html {
     let (state, _dispatch) = use_store::<AppState>();
 
-    let logout = |_| match AuthService::logout() {
-        Ok(_) => {
-            info!("Loged out");
-        }
-        Err(_) => {
-            log::error!("Error loging out")
-        }
+    let logout = |_| {
+        spawn_local(async {
+            match AuthService::logout().await {
+                Ok(_) => {
+                    info!("Loged out");
+                }
+                Err(_) => {
+                    log::error!("Error loging out")
+                }
+            }
+        })
     };
 
     html! {

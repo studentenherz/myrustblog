@@ -1,36 +1,35 @@
+use actix_identity::Identity;
 use actix_web::{web, HttpResponse, Responder};
 use chrono::Utc;
 
 use crate::{
     database::DBHandler,
-    models::{Claims, Post, PostsQueryParams},
+    models::{Post, PostsQueryParams},
     utils::generate_unique_slug,
 };
 use common::{CreatePostRequest, GetPostsResponse, PostCreatedResponse, UpdatePostRequest};
 
 pub async fn create_post<T: DBHandler>(
     db_handler: web::Data<T>,
-    claims: Claims,
     post: web::Json<CreatePostRequest>,
+    user: Identity,
 ) -> impl Responder {
-    if claims.role != "Admin" && claims.role != "Editor" {
-        return HttpResponse::Unauthorized().finish();
-    }
-
-    if let Ok(slug) = generate_unique_slug(db_handler.as_ref(), &post.title).await {
-        if db_handler
-            .create_post(&Post {
-                id: None,
-                slug: slug.clone(),
-                title: post.title.clone(),
-                content: post.content.clone(),
-                author: claims.sub,
-                published_at: Utc::now(),
-            })
-            .await
-            .is_ok()
-        {
-            return HttpResponse::Ok().json(PostCreatedResponse { slug });
+    if let Ok(user_id) = user.id() {
+        if let Ok(slug) = generate_unique_slug(db_handler.as_ref(), &post.title).await {
+            if db_handler
+                .create_post(&Post {
+                    id: None,
+                    slug: slug.clone(),
+                    title: post.title.clone(),
+                    content: post.content.clone(),
+                    author: user_id,
+                    published_at: Utc::now(),
+                })
+                .await
+                .is_ok()
+            {
+                return HttpResponse::Ok().json(PostCreatedResponse { slug });
+            }
         }
     }
 
@@ -39,21 +38,19 @@ pub async fn create_post<T: DBHandler>(
 
 pub async fn update_post<T: DBHandler>(
     db_handler: web::Data<T>,
-    claims: Claims,
     post: web::Json<UpdatePostRequest>,
+    user: Identity,
 ) -> impl Responder {
-    if claims.role != "Admin" && claims.role != "Editor" {
-        return HttpResponse::Unauthorized().finish();
-    }
-
-    if db_handler
-        .update_post(&post.slug, &post.content)
-        .await
-        .is_ok()
-    {
-        return HttpResponse::Ok().json(PostCreatedResponse {
-            slug: post.slug.clone(),
-        });
+    if let Ok(_user_id) = user.id() {
+        if db_handler
+            .update_post(&post.slug, &post.content)
+            .await
+            .is_ok()
+        {
+            return HttpResponse::Ok().json(PostCreatedResponse {
+                slug: post.slug.clone(),
+            });
+        }
     }
 
     HttpResponse::InternalServerError().finish()
@@ -61,15 +58,13 @@ pub async fn update_post<T: DBHandler>(
 
 pub async fn delete_post<T: DBHandler>(
     db_handler: web::Data<T>,
-    claims: Claims,
     slug: web::Path<String>,
+    user: Identity,
 ) -> impl Responder {
-    if claims.role != "Admin" && claims.role != "Editor" {
-        return HttpResponse::Unauthorized().finish();
-    }
-
-    if let Ok(deleted_count) = db_handler.delete_post(&slug).await {
-        return HttpResponse::Ok().json(deleted_count);
+    if let Ok(_user_id) = user.id() {
+        if let Ok(deleted_count) = db_handler.delete_post(&slug).await {
+            return HttpResponse::Ok().json(deleted_count);
+        }
     }
 
     HttpResponse::InternalServerError().finish()

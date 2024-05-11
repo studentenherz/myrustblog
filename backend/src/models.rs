@@ -60,10 +60,3 @@ impl From<UnconfirmedUser> for User {
         }
     }
 }
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Claims {
-    pub sub: String,  // Subject, commonly used to store the user ID
-    pub role: String, // The user's role
-    pub exp: usize,   // Expiration time
-}
