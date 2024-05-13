@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use yewdux::prelude::*;
 
-#[derive(PartialEq, Debug, Default, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Default, Serialize, Deserialize, Clone)]
 pub struct User {
     pub username: String,
     pub role: String,
