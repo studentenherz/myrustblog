@@ -1,9 +1,10 @@
 use pulldown_cmark::{html::push_html, Options, Parser};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{wasm_bindgen::JsCast, HtmlInputElement, HtmlTextAreaElement};
+use web_sys::{HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
-use yew_router::{history::History, prelude::*};
-use yewdux::Dispatch;
+use yew_router::history::History;
+use yew_router::prelude::*;
+use yewdux::prelude::*;
 
 use crate::{
     pages::Layout,
@@ -11,23 +12,6 @@ use crate::{
     services::api::{ApiError, ApiService},
     utils::{set_title, AppState},
 };
-
-#[derive(Debug, Default)]
-struct EditPage {
-    title: String,
-    content: String,
-    preview: bool,
-    content_rows: u32,
-}
-
-enum Msg {
-    UpdateTitle(String),
-    UpdateContent(String),
-    Publish,
-    PublishError(ApiError),
-    TogglePreview,
-    Ignore,
-}
 
 #[derive(Properties, PartialEq)]
 struct Props {
@@ -37,146 +21,160 @@ struct Props {
 
 const CHARS_PER_LINE: u32 = 80;
 
-impl Component for EditPage {
-    type Message = Msg;
-    type Properties = Props;
+#[function_component(EditPage)]
+fn edit_page(props: &Props) -> Html {
+    let title = use_state(String::new);
+    let content = use_state(String::new);
+    let preview = use_state(|| false);
+    let content_rows = use_state(|| 2);
+    let state = use_selector(|state: &AppState| state.user.clone());
 
-    fn create(ctx: &Context<Self>) -> Self {
-        if let Some(slug) = ctx.props().slug.clone() {
-            let update_title_cb = ctx.link().callback(|title| Msg::UpdateTitle(title));
-            let update_content_cb = ctx.link().callback(|content| Msg::UpdateContent(content));
+    let slug = props.slug.clone();
 
-            spawn_local(async move {
-                match ApiService::get_post(&slug).await {
-                    Ok(Some(post)) => {
-                        set_title(&format!("Edit | {}", &post.title));
-                        update_title_cb.emit(post.title);
-                        update_content_cb.emit(post.content);
-                    }
-                    Ok(None) => yew_router::history::BrowserHistory::new()
-                        .replace(AppRoute::NotFound.to_path()),
-                    Err(_) => {
-                        log::error!("Error")
-                    }
-                }
-            });
-        }
-
-        Self::default()
+    if state.is_none() {
+        return html! {
+            <Redirect<AppRoute> to={AppRoute::Home}/>
+        };
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let dispatch = Dispatch::<AppState>::global();
+    {
+        let title = title.clone();
+        let content = content.clone();
+        let slug = slug.clone();
 
-        if dispatch.get().user.is_none() {
-            return html! {
-                <Redirect<AppRoute> to={AppRoute::Home}/>
-            };
-        }
+        use_effect_with(slug, move |slug| {
+            let title = title.clone();
+            let content = content.clone();
 
-        let parser = Parser::new_ext(
-            &self.content,
-            Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
-        );
-
-        let mut html_out = String::new();
-        push_html(&mut html_out, parser);
-
-        html! {
-            <Layout>
-                <div class="post-title">
-                    <input id="title-input" type="text" placeholder={"Title..."}
-                    value={self.title.clone()}
-                    oninput={ctx.link().callback(|e: InputEvent| {
-                        if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlInputElement>().ok()) {
-                            Msg::UpdateTitle(input.value())
-                        } else {
-                            Msg::Ignore
-                        }
-                    })}/>
-                </div>
-                <div class="create-container">
-                    <div class="editor-bar">
-                    <div class="clickable" onclick={ctx.link().callback(|_e| Msg::TogglePreview)}>
-                            if self.preview {
-                                <i class="fas fa-pencil icon"></i> { "Edit" }
-                            }
-                            else{
-                                <i class="fas fa-eye icon"></i> { "Preview" }
-                            }
-                            </div>
-                        <button disabled={self.title.is_empty() || self.content.is_empty()}
-                            onclick={ctx.link().callback(|_| Msg::Publish)}
-                        > { "Publish" } </button>
-                    </div>
-                    if self.preview {
-                        <div class="md-preview">
-                            { Html::from_html_unchecked(html_out.into()) }
-                            </div>
-                    }
-                    else {
-                        <div class="md-editor">
-                            <textarea  placeholder={"Write your article here using markdown..."}
-                            value={self.content.clone()}
-                            rows={self.content_rows.to_string()}
-                            oninput={ctx.link().callback(|e: InputEvent| {
-                                if let Some(input) = e.target().and_then(|t| t.dyn_into::<HtmlTextAreaElement>().ok()) {
-                                    Msg::UpdateContent(input.value())
-                                } else {
-                                    Msg::Ignore
-                                }
-                            })}/>
-                        </div>
-                    }
-                </div>
-            </Layout>
-        }
-    }
-
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::Ignore => {}
-            Msg::UpdateContent(content) => {
-                self.content_rows = 2;
-                for line in content.lines() {
-                    self.content_rows += line.len() as u32 / CHARS_PER_LINE + 1;
-                }
-                self.content = content;
-            }
-            Msg::UpdateTitle(title) => {
-                set_title(&format!("Creating | {}", title));
-                self.title = title;
-            }
-            Msg::TogglePreview => {
-                self.preview = !self.preview;
-            }
-            Msg::Publish => {
-                let title = self.title.clone();
-                let content = self.content.clone();
-                let slug = ctx.props().slug.clone();
-
-                let api_error_cb = ctx.link().callback(|err| Msg::PublishError(err));
-
+            if let Some(slug) = slug.clone() {
                 spawn_local(async move {
-                    match if let Some(slug) = slug {
-                        ApiService::_update_post(&slug, &content).await
-                    } else {
-                        ApiService::create_post(&title, &content).await
-                    } {
-                        Ok(slug) => {
-                            yew_router::history::BrowserHistory::new()
-                                .push(AppRoute::Post { slug }.to_path());
+                    match ApiService::get_post(&slug).await {
+                        Ok(Some(post)) => {
+                            set_title(&format!("Edit | {}", &post.title));
+                            title.set(post.title);
+                            content.set(post.content);
                         }
-                        Err(err) => api_error_cb.emit(err),
+                        Ok(None) => yew_router::history::BrowserHistory::new()
+                            .replace(AppRoute::NotFound.to_path()),
+                        Err(_) => {
+                            log::error!("Error fetching post")
+                        }
                     }
                 });
             }
-            Msg::PublishError(err) => {
-                log::error!("{:?}", err);
-            }
-        }
 
-        true
+            || ()
+        });
+    }
+
+    let on_update_title = {
+        let title = title.clone();
+        Callback::from(move |e: InputEvent| {
+            if let Some(input) = e.target_dyn_into::<HtmlInputElement>() {
+                title.set(input.value());
+            }
+        })
+    };
+
+    let on_update_content = {
+        let content = content.clone();
+        Callback::from(move |e: InputEvent| {
+            if let Some(input) = e.target_dyn_into::<HtmlTextAreaElement>() {
+                let content_value = input.value();
+                content.set(content_value);
+            }
+        })
+    };
+
+    {
+        let content = content.clone();
+        let content_rows = content_rows.clone();
+
+        use_effect_with(content, move |content| {
+            let rows = content.lines().fold(2, |acc, line| {
+                acc + (line.len() as u32 / CHARS_PER_LINE + 1)
+            });
+            content_rows.set(rows);
+        })
+    }
+
+    let on_toggle_preview = {
+        let preview = preview.clone();
+        Callback::from(move |_| {
+            preview.set(!*preview);
+        })
+    };
+
+    let on_publish = {
+        let title = title.clone();
+        let content = content.clone();
+        let slug = props.slug.clone();
+
+        Callback::from(move |_| {
+            let title = title.clone();
+            let content = content.clone();
+            let api_error_cb = Callback::from(|err: ApiError| log::error!("{:?}", err));
+            let slug = slug.clone();
+
+            spawn_local(async move {
+                match if let Some(slug) = slug {
+                    ApiService::_update_post(&slug, &content).await
+                } else {
+                    ApiService::create_post(&title, &content).await
+                } {
+                    Ok(slug) => {
+                        yew_router::history::BrowserHistory::new()
+                            .push(AppRoute::Post { slug }.to_path());
+                    }
+                    Err(err) => api_error_cb.emit(err),
+                }
+            });
+        })
+    };
+
+    let parser = Parser::new_ext(
+        &*content,
+        Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+    );
+
+    let mut html_out = String::new();
+    push_html(&mut html_out, parser);
+
+    html! {
+        <Layout>
+            <div class="post-title">
+                <input id="title-input" type="text" placeholder={"Title..."}
+                value={(*title).clone()}
+                oninput={on_update_title}/>
+            </div>
+            <div class="create-container">
+                <div class="editor-bar">
+                    <div class="clickable" onclick={on_toggle_preview}>
+                        if *preview {
+                            <i class="fas fa-pencil icon"></i> { "Edit" }
+                        } else {
+                            <i class="fas fa-eye icon"></i> { "Preview" }
+                        }
+                    </div>
+                    <button disabled={title.is_empty() || content.is_empty()}
+                        onclick={on_publish}>
+                        { "Publish" }
+                    </button>
+                </div>
+                if *preview {
+                    <div class="md-preview">
+                        { Html::from_html_unchecked(html_out.into()) }
+                    </div>
+                } else {
+                    <div class="md-editor">
+                        <textarea placeholder={"Write your article here using markdown..."}
+                        value={(*content).clone()}
+                        rows={content_rows.to_string()}
+                        oninput={on_update_content}/>
+                    </div>
+                }
+            </div>
+        </Layout>
     }
 }
 

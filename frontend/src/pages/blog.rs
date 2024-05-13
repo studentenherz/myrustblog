@@ -1,106 +1,93 @@
 use log::info;
 use std::rc::Rc;
-
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew::Callback;
 
 use crate::{components::PostCard, pages::Layout, services::api::ApiService, utils::set_title};
 
-use common::Post;
+#[function_component(Blog)]
+pub fn blog() -> Html {
+    let page = use_state(|| 1u64);
+    let pages = use_state(|| 1u64);
+    let posts = use_state(|| vec![]);
 
-#[derive(Debug, Default)]
-pub struct Blog {
-    pub page: u64,
-    pub pages: u64,
-    pub posts: Vec<Rc<Post>>,
-}
+    let update_posts = {
+        let posts = posts.clone();
+        let pages = pages.clone();
 
-pub enum Msg {
-    UpdatePosts((Vec<Post>, u64)),
-    NextPage,
-    PreviousPage,
-}
+        Callback::from(move |page: u64| {
+            let posts = posts.clone();
+            let pages = pages.clone();
 
-impl Blog {
-    fn update_posts(page: u64, ctx: &Context<Self>) {
-        let update_posts_cb = ctx.link().callback(Msg::UpdatePosts);
-
-        spawn_local(async move {
-            match ApiService::get_posts(Some(page), Some(10), None, None).await {
-                Ok((posts, pages)) => {
-                    update_posts_cb.emit((posts, pages.unwrap_or(1)));
+            spawn_local(async move {
+                match ApiService::get_posts(Some(page), Some(10), None, None).await {
+                    Ok((fetched_posts, total_pages)) => {
+                        posts.set(fetched_posts.into_iter().map(Rc::new).collect());
+                        pages.set(total_pages.unwrap_or(1));
+                    }
+                    Err(err) => {
+                        info!("Error {:?}", err);
+                    }
                 }
-                Err(err) => {
-                    info!("Error {:?}", err);
-                }
-            }
+            });
+        })
+    };
+
+    {
+        let update_posts = update_posts.clone();
+        let page = *page;
+
+        use_effect_with(page, move |page| {
+            set_title("Blog");
+            update_posts.emit(*page);
         });
     }
-}
 
-impl Component for Blog {
-    type Message = Msg;
-    type Properties = ();
+    let next_page = {
+        let page = page.clone();
+        let update_posts = update_posts.clone();
+        Callback::from(move |_| {
+            let new_page = *page + 1;
+            page.set(new_page);
+            update_posts.emit(new_page);
+        })
+    };
 
-    fn create(ctx: &Context<Self>) -> Self {
-        Self::update_posts(1, ctx);
+    let previous_page = {
+        let page = page.clone();
+        let update_posts = update_posts.clone();
+        Callback::from(move |_| {
+            let new_page = *page - 1;
+            page.set(new_page);
+            update_posts.emit(new_page);
+        })
+    };
 
-        set_title("Blog");
-
-        Self {
-            page: 1,
-            ..Self::default()
-        }
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        html! {
-            <Layout>
-                <div class="blog-posts-list">
-                    <div class="posts-container">
-                        { for self.posts.iter().map(|post| html! {
-                            <PostCard
-                                post = {post.clone()}
-                            />
-                        } ) }
-                    </div>
-                    <div class="posts-container-navigation">
-                        <button
-                            class="prevent-default"
-                            disabled={self.page <= 1}
-                            onclick={ctx.link().callback(|_|  Msg::PreviousPage)}>
-                                <i class="fas fa-arrow-left icon"></i> { "Previous page" }
-                        </button>
-                        <div>{ self.page } { " / " }  {self.pages} </div>
-                        <button
-                            class="prevent-default"
-                            disabled={self.page >= self.pages}
-                            onclick={ctx.link().callback(|_|  Msg::NextPage)}>
-                                { "Next page" } <i class="fas fa-arrow-right icon"></i>
-                        </button>
-                    </div>
+    html! {
+        <Layout>
+            <div class="blog-posts-list">
+                <div class="posts-container">
+                    { for posts.iter().map(|post| html! {
+                        <PostCard post={post.clone()} />
+                    }) }
                 </div>
-            </Layout>
-        }
-    }
-
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::UpdatePosts((posts, pages)) => {
-                self.posts = posts.iter().map(|post| Rc::new(post.clone())).collect();
-                self.pages = pages;
-                return true;
-            }
-            Msg::NextPage => {
-                self.page += 1;
-                Self::update_posts(self.page, ctx);
-            }
-            Msg::PreviousPage => {
-                self.page -= 1;
-                Self::update_posts(self.page, ctx);
-            }
-        }
-
-        false
+                <div class="posts-container-navigation">
+                    <button
+                        class="prevent-default"
+                        disabled={*page <= 1}
+                        onclick={previous_page}>
+                        <i class="fas fa-arrow-left icon"></i> { "Previous page" }
+                    </button>
+                    <div>{ *page } { " / " }  {*pages} </div>
+                    <button
+                        class="prevent-default"
+                        disabled={*page >= *pages}
+                        onclick={next_page}>
+                        { "Next page" } <i class="fas fa-arrow-right icon"></i>
+                    </button>
+                </div>
+            </div>
+        </Layout>
     }
 }
