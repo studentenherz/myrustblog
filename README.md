@@ -19,3 +19,7 @@ I made this mostly to learn Rust (by doing), but I also want this to become some
 ### Want to contribute?
 
 Of course! Just contact me via Telegram [@michelromero](https://t.me/michelromero) or open an issue in the GitHub [repo](https://github.com/studentenherz/myrustblog).
+
+### Acknowledgements
+
+- Thanks to [Snowden](https://mikesilverman.net) for their feedback. Please look at their work and visit [https://roguelikeracing.com](https://roguelikeracing.com) to play a multiplayer turn based RPG written in Rust using the Yew UI framework and the Bevy game engine.
