@@ -15,20 +15,29 @@ pub async fn create_post<T: DBHandler>(
     user: Identity,
 ) -> impl Responder {
     if let Ok(user_id) = user.id() {
-        if let Ok(slug) = generate_unique_slug(db_handler.as_ref(), &post.title).await {
-            if db_handler
-                .create_post(&Post {
-                    id: None,
-                    slug: slug.clone(),
-                    title: post.title.clone(),
-                    content: post.content.clone(),
-                    author: user_id,
-                    published_at: Utc::now(),
-                })
-                .await
-                .is_ok()
-            {
-                return HttpResponse::Ok().json(PostCreatedResponse { slug });
+        if let Ok(db_result) = db_handler.find_user(&user_id).await {
+            match db_result {
+                Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                    if let Ok(slug) = generate_unique_slug(db_handler.as_ref(), &post.title).await {
+                        if db_handler
+                            .create_post(&Post {
+                                id: None,
+                                slug: slug.clone(),
+                                title: post.title.clone(),
+                                content: post.content.clone(),
+                                author: user_id,
+                                published_at: Utc::now(),
+                            })
+                            .await
+                            .is_ok()
+                        {
+                            return HttpResponse::Ok().json(PostCreatedResponse { slug });
+                        }
+                    }
+                }
+                _ => {
+                    return HttpResponse::Unauthorized().finish();
+                }
             }
         }
     }
@@ -41,15 +50,24 @@ pub async fn update_post<T: DBHandler>(
     post: web::Json<UpdatePostRequest>,
     user: Identity,
 ) -> impl Responder {
-    if let Ok(_user_id) = user.id() {
-        if db_handler
-            .update_post(&post.slug, &post.content)
-            .await
-            .is_ok()
-        {
-            return HttpResponse::Ok().json(PostCreatedResponse {
-                slug: post.slug.clone(),
-            });
+    if let Ok(user_id) = user.id() {
+        if let Ok(db_result) = db_handler.find_user(&user_id).await {
+            match db_result {
+                Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                    if db_handler
+                        .update_post(&post.slug, &post.content)
+                        .await
+                        .is_ok()
+                    {
+                        return HttpResponse::Ok().json(PostCreatedResponse {
+                            slug: post.slug.clone(),
+                        });
+                    }
+                }
+                _ => {
+                    return HttpResponse::Unauthorized().finish();
+                }
+            }
         }
     }
 
@@ -61,9 +79,16 @@ pub async fn delete_post<T: DBHandler>(
     slug: web::Path<String>,
     user: Identity,
 ) -> impl Responder {
-    if let Ok(_user_id) = user.id() {
-        if let Ok(deleted_count) = db_handler.delete_post(&slug).await {
-            return HttpResponse::Ok().json(deleted_count);
+    if let Ok(user_id) = user.id() {
+        if let Ok(db_result) = db_handler.find_user(&user_id).await {
+            match db_result {
+                Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                    if let Ok(deleted_count) = db_handler.delete_post(&slug).await {
+                        return HttpResponse::Ok().json(deleted_count);
+                    }
+                }
+                _ => return HttpResponse::Unauthorized().finish(),
+            }
         }
     }
 
