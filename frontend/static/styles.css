@@ -607,6 +607,7 @@ code {
 }
 
 pre:has(code) {
+    tab-size: 4;
     font-size: large;
     display: flex;
     flex-direction: column;

@@ -76,12 +76,38 @@ fn edit_page(props: &Props) -> Html {
         })
     };
 
-    let on_update_content = {
+    let on_editor_input = {
         let content = content.clone();
         Callback::from(move |e: InputEvent| {
+            log::info!("{:?}", e);
+
             if let Some(input) = e.target_dyn_into::<HtmlTextAreaElement>() {
                 let content_value = input.value();
                 content.set(content_value);
+            }
+        })
+    };
+
+    let onkeydown = {
+        let content = content.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            if e.key() == "Tab" {
+                e.prevent_default();
+
+                if let Some(target) = e.target_dyn_into::<HtmlTextAreaElement>() {
+                    let value = target.value();
+                    let start = target.selection_start().unwrap_or(Some(0)).unwrap_or(0) as usize;
+                    let end = target.selection_end().unwrap_or(Some(0)).unwrap_or(0) as usize;
+
+                    let new_value = format!("{}{}{}", &value[..start], "\t", &value[end..]);
+                    content.set(new_value.clone());
+
+                    target.set_value(&new_value);
+                    target
+                        .set_selection_start(Some((start + 1) as u32))
+                        .unwrap();
+                    target.set_selection_end(Some((start + 1) as u32)).unwrap();
+                }
             }
         })
     };
@@ -170,7 +196,8 @@ fn edit_page(props: &Props) -> Html {
                         <textarea placeholder={"Write your article here using markdown..."}
                         value={(*content).clone()}
                         rows={content_rows.to_string()}
-                        oninput={on_update_content}/>
+                        oninput={on_editor_input}
+                        onkeydown={onkeydown}/>
                     </div>
                 }
             </div>
