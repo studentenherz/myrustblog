@@ -59,12 +59,12 @@ pub fn post_page(
                     if role == "Admin" || role == "Editor" {
                         <div class="post-edit-bar">
                             <a class="clickable" href={ format!("/edit/{}", post.slug.clone()) }>
-                                <i class="fa-regular fa-pen-to-square icon"></i> { "Edit this post" }
+                                <i class="icon-edit icon"></i> { "Edit this post" }
                             </a>
                             {
                                 Html::from_html_unchecked(r#"
                                 <button onclick="document.getElementById('delete-dialog').showModal()">
-                                    <i class="fa-solid fa-trash icon"></i> Delete
+                                    <i class="icon-trash icon"></i> Delete
                                 </button>
                                 "#.into())
                             }

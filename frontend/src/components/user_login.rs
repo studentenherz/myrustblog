@@ -93,7 +93,7 @@ pub fn login_form() -> Html {
 
             <form onsubmit={onsubmit}>
                 <div class="input-wrapper">
-                    <i class="fas fa-user icon"></i>
+                    <i class="icon-user icon"></i>
                     <input
                         type="text"
                         placeholder="Username"
@@ -102,7 +102,7 @@ pub fn login_form() -> Html {
                     />
                 </div>
                 <div class="input-wrapper">
-                    <i class="fas fa-lock icon"></i>
+                    <i class="icon-lock icon"></i>
                     <input
                         type="password"
                         placeholder="Password"

@@ -26,7 +26,7 @@ pub fn header(HeaderProps { user }: &HeaderProps) -> Html {
                     if let Some(User {username, role }) = user {
                         if role == "Admin" || role == "Editor" {
                             <a classes="clickable" href={ "/create" }>
-                                <i class="fa-regular fa-pen-to-square icon"></i> { "Create" }
+                                <i class="icon-edit icon"></i> { "Create" }
                             </a>
                         }
                         <div class="username">{ username }</div>

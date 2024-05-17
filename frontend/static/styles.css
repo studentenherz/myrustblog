@@ -102,7 +102,7 @@ footer {
         border-top: 2px solid var(--dark-secondary-fg-color);
     }
 
-    a:has(.fa-square-rss):hover {
+    a:has([class*="rss"]):hover {
         color: var(--yellow-color);
     }
 }
@@ -117,6 +117,7 @@ footer {
 
         &:hover {
             color: var(--link-color);
+            text-decoration: none;
         }
     }
 

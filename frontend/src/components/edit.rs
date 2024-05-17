@@ -167,9 +167,9 @@ fn edit_page(props: &Props) -> Html {
                 <div class="editor-bar">
                     <div class="clickable" onclick={on_toggle_preview}>
                         if *preview {
-                            <i class="fas fa-pencil icon"></i> { "Edit" }
+                            <i class="icon-pencil icon"></i> { "Edit" }
                         } else {
-                            <i class="fas fa-eye icon"></i> { "Preview" }
+                            <i class="icon-eye icon"></i> { "Preview" }
                         }
                     </div>
                     <button disabled={title.is_empty() || content.is_empty()}

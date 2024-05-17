@@ -38,22 +38,22 @@ pub fn blog(BlogProps { page, pages, posts }: &BlogProps) -> Html {
             <div class="posts-container-navigation">
                 if let Some(prev_url) = prev_page_url {
                     <a href={ prev_url }>
-                        <i class="fas fa-arrow-left icon"></i> { "Previous page" }
+                        <i class="icon-left icon"></i> { "Previous page" }
                     </a>
                 } else {
                     <span class="disabled">
-                        <i class="fas fa-arrow-left icon"></i> { "Previous page" }
+                        <i class="icon-left icon"></i> { "Previous page" }
                     </span>
                 }
                 <div>{ page } { " / " }  {pages} </div>
                 if let Some(next_url) = next_page_url {
                     <a href={ next_url }>
-                        { "Next page" } <i class="fas fa-arrow-right icon"></i>
+                        { "Next page" } <i class="icon-right icon"></i>
                     </a>
                 }
                 else {
                     <span class="disabled">
-                        { "Next page" } <i class="fas fa-arrow-right icon"></i>
+                        { "Next page" } <i class="icon-right icon"></i>
                     </span>
                 }
             </div>
