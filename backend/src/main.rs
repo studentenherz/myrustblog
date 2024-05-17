@@ -1,5 +1,4 @@
 use actix_cors::Cors;
-use actix_files;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::RedisSessionStore, SessionMiddleware};
 use actix_web::{
@@ -137,8 +136,6 @@ async fn main() -> std::io::Result<()> {
                 web::resource("/delete/{slug}")
                     .get(handlers::delete_post_and_redirect::<MongoDBHandler>),
             )
-            // .service(web::resource("/login").get(handlers::yew_login))
-            // .service(web::resource("/register").get(handlers::yew_register))
             .service(
                 spa()
                     .index_file("./dist/index.html")
