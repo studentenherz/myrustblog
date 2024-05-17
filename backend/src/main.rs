@@ -1,4 +1,5 @@
 use actix_cors::Cors;
+use actix_files;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::RedisSessionStore, SessionMiddleware};
 use actix_web::{
@@ -101,8 +102,7 @@ async fn main() -> std::io::Result<()> {
                             .service(
                                 web::resource("/login")
                                     .post(handlers::login_user::<MongoDBHandler>),
-                            )
-                            .service(web::resource("/logout").get(handlers::logout_user)),
+                            ),
                     )
                     .service(
                         web::scope("/post")
@@ -129,6 +129,16 @@ async fn main() -> std::io::Result<()> {
                     )
                     .service(web::resource("/highlight").post(handlers::highlight_code)),
             )
+            .service(web::resource("/").get(handlers::yew_home::<MongoDBHandler>))
+            .service(web::resource("/blog").get(handlers::yew_blog::<MongoDBHandler>))
+            .service(web::resource("/post/{slug}").get(handlers::yew_post::<MongoDBHandler>))
+            .service(web::resource("/logout").get(handlers::logout_user))
+            .service(
+                web::resource("/delete/{slug}")
+                    .get(handlers::delete_post_and_redirect::<MongoDBHandler>),
+            )
+            // .service(web::resource("/login").get(handlers::yew_login))
+            // .service(web::resource("/register").get(handlers::yew_register))
             .service(
                 spa()
                     .index_file("./dist/index.html")
@@ -136,6 +146,7 @@ async fn main() -> std::io::Result<()> {
                     .static_resources_location("./dist")
                     .finish(),
             )
+            .service(actix_files::Files::new("/", "./dist"))
     })
     .bind("0.0.0.0:8081")?
     .run()

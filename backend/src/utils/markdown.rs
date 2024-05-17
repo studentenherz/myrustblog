@@ -4,16 +4,10 @@ use pulldown_cmark::{
     html, CodeBlockKind, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd,
 };
 
-use common::{utils::title_to_slug, CodeBlock};
+use crate::utils::Highlighter;
+use common::{utils::title_to_slug, Header};
 
-#[derive(Debug, PartialEq)]
-pub struct Header {
-    pub level: HeadingLevel,
-    pub text: String,
-    pub id: String,
-}
-
-pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, CodeBlock>) {
+pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header>, String) {
     let parser = Parser::new_ext(
         html_text,
         Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
@@ -75,11 +69,9 @@ pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, 
         })
         .collect();
 
-    let mut code_block_idx = 0u32;
     let mut in_codeblock = false;
     let mut lang = "";
     let mut code_cum = String::new();
-    let mut codeblocks = HashMap::<String, CodeBlock>::new();
     let parser = parser.iter().filter_map(|event| match event {
         Event::Start(Tag::Heading {
             level,
@@ -100,7 +92,6 @@ pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, 
         }
         Event::Start(Tag::CodeBlock(cb)) => {
             in_codeblock = true;
-            code_block_idx += 1;
             lang = match cb {
                 CodeBlockKind::Indented => "",
                 CodeBlockKind::Fenced(lng) => lng,
@@ -108,23 +99,21 @@ pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, 
             None
         }
         Event::Text(code_text) if in_codeblock => {
-            code_cum.push_str(&code_text);
+            code_cum.push_str(code_text);
             None
         }
         Event::End(TagEnd::CodeBlock) => {
             in_codeblock = false;
-            let id = format!("codeblock-id-{code_block_idx}");
-            codeblocks.insert(
-                id.clone(),
-                CodeBlock {
-                    lang: lang.to_string(),
-                    code: code_cum.clone(),
-                },
-            );
+
+            let highlighted_code =
+                highlighter.parse_html_with_class_style_with_code_extension(&code_cum, lang);
 
             let code_in_html_event = Some(Event::Html(
-                format!(r#"<pre id="{id}"><code class="language-{lang}">{code_cum}</code></pre>"#)
-                    .into(),
+                format!(
+                    r#"<pre><span class="language-tag">.{lang}</span><code class="language-{lang}">{}</code></pre>"#,
+                    highlighted_code.unwrap_or(code_cum.clone())
+                )
+                .into(),
             ));
 
             code_cum.clear();
@@ -136,5 +125,5 @@ pub fn parse_markdown(html_text: &str) -> (Vec<Header>, String, HashMap<String, 
     let mut html_string = String::new();
     html::push_html(&mut html_string, parser);
 
-    (headers, html_string, codeblocks)
+    (headers, html_string)
 }

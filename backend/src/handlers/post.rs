@@ -55,7 +55,7 @@ pub async fn update_post<T: DBHandler>(
             match db_result {
                 Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
                     if db_handler
-                        .update_post(&post.slug, &post.content)
+                        .update_post(&post.slug, &post.content, &post.title)
                         .await
                         .is_ok()
                     {
@@ -85,6 +85,29 @@ pub async fn delete_post<T: DBHandler>(
                 Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
                     if let Ok(deleted_count) = db_handler.delete_post(&slug).await {
                         return HttpResponse::Ok().json(deleted_count);
+                    }
+                }
+                _ => return HttpResponse::Unauthorized().finish(),
+            }
+        }
+    }
+
+    HttpResponse::InternalServerError().finish()
+}
+
+pub async fn delete_post_and_redirect<T: DBHandler>(
+    db_handler: web::Data<T>,
+    slug: web::Path<String>,
+    user: Identity,
+) -> impl Responder {
+    if let Ok(user_id) = user.id() {
+        if let Ok(db_result) = db_handler.find_user(&user_id).await {
+            match db_result {
+                Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                    if let Ok(_deleted_count) = db_handler.delete_post(&slug).await {
+                        return HttpResponse::Found()
+                            .append_header(("location", "/"))
+                            .finish();
                     }
                 }
                 _ => return HttpResponse::Unauthorized().finish(),

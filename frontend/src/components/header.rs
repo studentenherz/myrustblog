@@ -1,53 +1,39 @@
-use log::info;
-use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
-use yewdux::use_store;
 
-use crate::{routes::AppRoute, services::auth::AuthService, utils::*};
+use crate::utils::*;
+
+#[derive(PartialEq, Properties)]
+pub struct HeaderProps {
+    pub user: Option<User>,
+}
 
 #[function_component(Header)]
-pub fn header() -> Html {
-    let (state, _dispatch) = use_store::<AppState>();
-
-    let logout = |_| {
-        spawn_local(async {
-            match AuthService::logout().await {
-                Ok(_) => {
-                    info!("Loged out");
-                }
-                Err(_) => {
-                    log::error!("Error loging out")
-                }
-            }
-        })
-    };
-
+pub fn header(HeaderProps { user }: &HeaderProps) -> Html {
     html! {
         <header class="center-content">
-            <Link<AppRoute>
-                classes="logo hide-unless-hover"
-                to={AppRoute::Home}> <span class="paren">
+            <a
+                class="logo hide-unless-hover"
+                href={ "/" }> <span class="paren">
                     {"{"}</span> <span> { " st" } </span> <span class="hidden"> { "udentenherz" } </span>
                     <span> { " " } </span> <span class="paren"> {"}"}</span>
-            </Link<AppRoute>>
+            </a>
             <div class="separator"> </div>
             <nav>
-                <Link<AppRoute> to={AppRoute::Home}> { "Home" } </Link<AppRoute>>
-                <Link<AppRoute> to={AppRoute::Blog}> { "Blog" } </Link<AppRoute>>
+                <a href={ "/" }> { "Home" } </a>
+                <a href={ "/blog" }> { "Blog" } </a>
                 <div> { "|" }</div>
                 <div class="header-user">
-                    if let Some(User {username, role }) = &state.user {
+                    if let Some(User {username, role }) = user {
                         if role == "Admin" || role == "Editor" {
-                            <Link<AppRoute> classes="clickable" to={AppRoute::Create}>
+                            <a classes="clickable" href={ "/create" }>
                                 <i class="fa-regular fa-pen-to-square icon"></i> { "Create" }
-                            </Link<AppRoute>>
+                            </a>
                         }
                         <div class="username">{ username }</div>
-                        <button onclick={ logout }> { "Logout" } </button>
+                        <a class="button" href="/logout"> { "Logout" } </a>
                     }
                     else {
-                        <Link<AppRoute> classes="button" to={AppRoute::Login}> { "Login" } </Link<AppRoute>>
+                        <a class="button" href="/login"> { "Login" } </a>
                     }
                 </div>
             </nav>

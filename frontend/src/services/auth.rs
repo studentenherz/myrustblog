@@ -1,7 +1,6 @@
 use gloo_net::http::{Request, RequestBuilder};
 use reqwest::StatusCode;
 use serde::Serialize;
-use yewdux::prelude::*;
 
 use crate::api_url;
 use crate::utils::*;
@@ -14,7 +13,6 @@ pub enum AuthError {
     RegistrationError,
     ConfirmationError,
     RegistrationConflict(String),
-    LogoutError,
 }
 
 #[derive(Serialize)]
@@ -44,18 +42,10 @@ impl AuthService {
             .send()
             .await;
 
-        let dispatch = Dispatch::<AppState>::global();
-
         if let Ok(response) = result {
             match response.status() {
                 200..=299 => {
                     log::info!("Successfully loged in!");
-                    dispatch.set(AppState {
-                        user: Some(User {
-                            username: username.to_string(),
-                            role: "Admin".to_string(),
-                        }),
-                    });
                     return Ok(());
                 }
                 400..=499 => {
@@ -135,20 +125,6 @@ impl AuthService {
         // Handle network error
         log::error!("Error in the request");
         Err(AuthError::NetworkError)
-    }
-
-    pub async fn logout() -> Result<(), AuthError> {
-        let result = Request::get(&api_url!("/auth/logout")).send().await;
-
-        let dispatch = Dispatch::<AppState>::global();
-
-        if let Ok(_response) = result {
-            dispatch.set(AppState { user: None });
-
-            return Ok(());
-        }
-
-        Err(AuthError::LogoutError)
     }
 
     pub fn _protected_get(url: &str) -> Result<RequestBuilder, AuthError> {

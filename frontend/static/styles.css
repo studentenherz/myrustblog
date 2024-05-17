@@ -179,6 +179,10 @@ header {
     }
 }
 
+.disabled{
+    opacity: 0.5;
+}
+
 button, .button {
     color: inherit;
     font-size: inherit;

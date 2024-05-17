@@ -56,12 +56,13 @@ impl ApiService {
         Err(ApiError::RequestError)
     }
 
-    pub async fn _update_post(slug: &str, content: &str) -> Result<String, ApiError> {
+    pub async fn _update_post(slug: &str, content: &str, title: &str) -> Result<String, ApiError> {
         if let Ok(builder) = AuthService::protected_post(&api_url!("/post/update")) {
             if let Ok(response) = builder
                 .json(&UpdatePostRequest {
                     slug: String::from(slug),
                     content: String::from(content),
+                    title: String::from(title),
                 })
                 .unwrap()
                 .send()
@@ -153,7 +154,7 @@ impl ApiService {
         Err(ApiError::RequestError)
     }
 
-    pub async fn get_posts(
+    pub async fn _get_posts(
         page: Option<u64>,
         per_page: Option<u64>,
         sort_by: Option<String>,
@@ -201,7 +202,7 @@ impl ApiService {
         Err(ApiError::RequestError)
     }
 
-    pub async fn highlight_code(
+    pub async fn _highlight_code(
         code_blocks: HashMap<String, CodeBlock>,
     ) -> Result<HashMap<String, String>, ApiError> {
         if let Ok(response) = Request::post(&api_url!("/highlight/"))
