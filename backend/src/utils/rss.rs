@@ -5,7 +5,7 @@ use common::{utils::get_summary, Post};
 
 const MAX_SUMMARY_SIZE: usize = 200;
 
-pub fn create_rss_feed(latest_posts: &Vec<Post>, config: &Config) -> Channel {
+pub fn create_rss_feed(latest_posts: &[Post], config: &Config) -> Channel {
     let items: Vec<Item> = latest_posts
         .iter()
         .map(|post| {
