@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use actix_identity::Identity;
 use actix_web::{web, HttpResponse, Responder};
+use common::utils::get_summary;
 use common::Post;
 use common::PostsQueryParams;
 use yew::ServerRenderer;
@@ -12,10 +13,14 @@ use crate::{
 };
 use frontend::{Blog, BlogProps, Home, Layout, LayoutProps, PostPage, PostProps, UsernameAndRole};
 
+const MAX_SUMMARY_SIZE: usize = 200;
+
 async fn get_full_html<T: DBHandler>(
     content: &str,
     user_iden: &Option<Identity>,
     db_handler: &T,
+    title: &str,
+    description: &str,
 ) -> String {
     let index_html_string = include_str!("../../index.html");
 
@@ -40,6 +45,15 @@ async fn get_full_html<T: DBHandler>(
     .await;
 
     index_html_string
+        .replace("</title>", &format!("{}</title>", title))
+        .replace(
+            r#"title" content=""#,
+            &format!(r#"title" content="{}"#, title),
+        )
+        .replace(
+            r#"description" content=""#,
+            &format!(r#"description" content="{}"#, description),
+        )
         .replace("</body>", &format!("{}</body>", layout))
         .replace("</main>", &format!("{}</main>", content))
 }
@@ -55,7 +69,16 @@ pub async fn yew_home<T: DBHandler>(
 
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(get_full_html(&content, &user, db_handler.as_ref()).await)
+        .body(
+            get_full_html(
+                &content,
+                &user,
+                db_handler.as_ref(),
+                "Studentenherz's Blog",
+                "A blogging website made with Rust, using Yew and Actix Web.",
+            )
+            .await,
+        )
 }
 
 pub async fn yew_blog<T: DBHandler>(
@@ -64,6 +87,8 @@ pub async fn yew_blog<T: DBHandler>(
     user: Option<Identity>,
 ) -> impl Responder {
     let mut content = String::from("Sorry something went wrong");
+    let title = "Studentenherz's Blog";
+    let description = "A blogging website made with Rust, using Yew and Actix Web.";
 
     if let Ok(posts) = db_handler.get_posts(&query).await {
         let posts: Vec<Arc<Post>> = posts.into_iter().map(Arc::new).collect();
@@ -84,7 +109,7 @@ pub async fn yew_blog<T: DBHandler>(
 
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(get_full_html(&content, &user, db_handler.as_ref()).await)
+        .body(get_full_html(&content, &user, db_handler.as_ref(), title, description).await)
 }
 
 pub async fn yew_post<T: DBHandler>(
@@ -94,6 +119,9 @@ pub async fn yew_post<T: DBHandler>(
     user_iden: Option<Identity>,
 ) -> impl Responder {
     let mut content = String::from("Sorry something went wrong");
+    let mut title = String::from("Studentenherz's Blog");
+    let mut description =
+        String::from("A blogging website made with Rust, using Yew and Actix Web.");
 
     let mut user = None;
     if let Some(iden) = &user_iden {
@@ -110,6 +138,8 @@ pub async fn yew_post<T: DBHandler>(
     if let Ok(post) = db_handler.get_post(&slug).await {
         if let Some(post) = post {
             let (headers, html_string) = parse_markdown(&post.content, &highlighter);
+            title = post.title.clone();
+            description = get_summary(&post.content, MAX_SUMMARY_SIZE);
 
             content = ServerRenderer::<PostPage>::with_props(move || PostProps {
                 slug: slug.clone().into(),
@@ -128,5 +158,14 @@ pub async fn yew_post<T: DBHandler>(
 
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(get_full_html(&content, &user_iden, db_handler.as_ref()).await)
+        .body(
+            get_full_html(
+                &content,
+                &user_iden,
+                db_handler.as_ref(),
+                &title,
+                &description,
+            )
+            .await,
+        )
 }
