@@ -1,3 +1,7 @@
 [[proxy]]
 rewrite = "/api/"
 backend = "http://localhost:8081/api/"
+
+[[proxy]]
+rewrite = "/logout"
+backend = "http://localhost:8081/logout"

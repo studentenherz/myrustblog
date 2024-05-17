@@ -2,30 +2,22 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{HtmlInputElement, SubmitEvent};
 use yew::prelude::*;
 use yew_router::prelude::*;
-use yewdux::prelude::*;
 
 use crate::{
     components::{NotificationLevel, ServiceNotification},
     routes::AppRoute,
     services::auth::{AuthError, AuthService},
-    utils::*,
 };
 use common::utils::{is_valid_email, is_valid_password, is_valid_username};
 
 #[function_component(UserRegistration)]
 pub fn user_registration() -> Html {
-    let app_state = use_selector(|state: &AppState| state.user.clone());
-
     let username = use_state(String::new);
     let email = use_state(String::new);
     let password = use_state(String::new);
     let service_notification_text = use_state(String::new);
     let service_notification_level = use_state(NotificationLevel::default);
     let disable_submit = use_state(|| false);
-
-    if app_state.is_some() {
-        return html! { <Redirect<AppRoute> to={AppRoute::Home}/> };
-    }
 
     let valid_username = is_valid_username(&username);
     let valid_email = is_valid_email(&email);
@@ -109,12 +101,12 @@ pub fn user_registration() -> Html {
         <div class="register">
             <h2>{"User registration"}</h2>
             if !(*service_notification_text).is_empty() {
-                <ServiceNotification message={(*service_notification_text).clone()} level={(*service_notification_level).clone()} />
+                <ServiceNotification message={(*service_notification_text).clone()} level={*service_notification_level} />
             }
 
             <form onsubmit={onsubmit}>
                 <div class="input-wrapper">
-                    <i class="fas fa-user icon"></i>
+                    <i class="icon-user icon"></i>
                     <input
                         type="text"
                         placeholder="Username"
@@ -123,7 +115,7 @@ pub fn user_registration() -> Html {
                     />
                 </div>
                 <div class="input-wrapper">
-                    <i class="fas fa-envelope icon"></i>
+                    <i class="icon-mail-alt icon"></i>
                     <input
                         type="email"
                         placeholder="Email"
@@ -132,7 +124,7 @@ pub fn user_registration() -> Html {
                     />
                 </div>
                 <div class="input-wrapper">
-                    <i class="fas fa-lock icon"></i>
+                    <i class="icon-lock icon"></i>
                     <input
                         type="password"
                         placeholder="Password"

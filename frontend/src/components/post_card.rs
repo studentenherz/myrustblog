@@ -1,14 +1,11 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use common::{utils::get_summary, Post};
 use yew::prelude::*;
-use yew_router::prelude::*;
-
-use crate::routes::AppRoute;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
-    pub post: Rc<Post>,
+    pub post: Arc<Post>,
 }
 
 const MAX_CONTENT_PREVIEW_LENGTH: usize = 150;
@@ -23,7 +20,7 @@ pub fn post_card(Props { post }: &Props) -> Html {
             <p class="preview"> { summary } { "..." } </p>
             <div class="lower-strip">
                 <time datetime={post.published_at.to_rfc2822()}> { &post.published_at.format("%d %b %Y").to_string() } </time>
-                <Link<AppRoute> to={AppRoute::Post { slug: post.slug.clone()}} > { "see more..." } </Link<AppRoute>>
+                <a href={ format!("/post/{}", post.slug) } > { "see more..." } </a>
             </div>
         </div>
     }

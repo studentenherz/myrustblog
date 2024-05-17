@@ -15,6 +15,7 @@ bcrypt = "0.15.0"
 bson = { version = "2.9.0", features = ["chrono-0_4"] }
 chrono = { version = "0.4.35", features = ["serde"] }
 common = { path = "../common" }
+frontend = { path = "../frontend" }
 dotenv = "0.15.0"
 futures-util = "0.3.30"
 lettre = { version = "0.11.4", features = ["tokio1", "tokio1-native-tls"] }
@@ -25,3 +26,8 @@ rss = "2.0.7"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 syntect = "5.2.0"
+yew = { version = "0.21.0", features = ["ssr"] }
+actix-files = "0.6.5"
+pulldown-cmark = { version = "0.10.2", default-features = false, features = [
+    "html",
+] }

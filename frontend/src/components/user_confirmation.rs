@@ -1,8 +1,7 @@
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
-use crate::{routes::AppRoute, services::auth::AuthService};
+use crate::services::auth::AuthService;
 
 #[derive(Properties, PartialEq)]
 pub struct ConfirmProps {
@@ -36,7 +35,7 @@ pub fn confirm_email(props: &ConfirmProps) -> Html {
         <>
             { (*confirmation_status).clone() }
             if *confirmed {
-                <Link<AppRoute> to={AppRoute::Home}> { "Go to the homepage " } </Link<AppRoute>>
+                <a href="/"> { "Go to the homepage " } </a>
             }
         </>
     }

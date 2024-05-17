@@ -1,5 +1,6 @@
 use bson::{oid::ObjectId, serde_helpers::chrono_datetime_as_bson_datetime};
 use chrono::{DateTime, Utc};
+use pulldown_cmark::HeadingLevel;
 use serde::{Deserialize, Serialize};
 
 pub mod utils;
@@ -19,6 +20,7 @@ pub struct PostCreatedResponse {
 pub struct UpdatePostRequest {
     pub slug: String,
     pub content: String,
+    pub title: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone)]
@@ -51,4 +53,11 @@ pub struct GetPostsResponse {
 pub struct CodeBlock {
     pub lang: String,
     pub code: String,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Header {
+    pub level: HeadingLevel,
+    pub text: String,
+    pub id: String,
 }

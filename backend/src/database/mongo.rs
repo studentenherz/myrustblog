@@ -151,12 +151,17 @@ impl PostDb for MongoDBHandler {
         }
     }
 
-    async fn update_post(&self, slug: &str, updated_content: &str) -> Result<u64, ()> {
+    async fn update_post(
+        &self,
+        slug: &str,
+        updated_content: &str,
+        updated_title: &str,
+    ) -> Result<u64, ()> {
         match self
             .post_collection
             .update_one(
                 doc! {"slug": slug},
-                doc! {"$set": doc! {"content": updated_content}},
+                doc! {"$set": doc! {"content": updated_content, "title": updated_title}},
                 None,
             )
             .await

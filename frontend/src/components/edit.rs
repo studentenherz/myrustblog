@@ -3,14 +3,11 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
 use yew_router::history::History;
-use yew_router::prelude::*;
-use yewdux::prelude::*;
 
 use crate::{
     pages::Layout,
-    routes::AppRoute,
     services::api::{ApiError, ApiService},
-    utils::{set_title, AppState},
+    utils::set_title,
 };
 
 #[derive(Properties, PartialEq)]
@@ -27,15 +24,8 @@ fn edit_page(props: &Props) -> Html {
     let content = use_state(String::new);
     let preview = use_state(|| false);
     let content_rows = use_state(|| 2);
-    let state = use_selector(|state: &AppState| state.user.clone());
 
     let slug = props.slug.clone();
-
-    if state.is_none() {
-        return html! {
-            <Redirect<AppRoute> to={AppRoute::Home}/>
-        };
-    }
 
     {
         let title = title.clone();
@@ -54,8 +44,7 @@ fn edit_page(props: &Props) -> Html {
                             title.set(post.title);
                             content.set(post.content);
                         }
-                        Ok(None) => yew_router::history::BrowserHistory::new()
-                            .replace(AppRoute::NotFound.to_path()),
+                        Ok(None) => yew_router::history::BrowserHistory::new().replace("/404"),
                         Err(_) => {
                             log::error!("Error fetching post")
                         }
@@ -144,13 +133,14 @@ fn edit_page(props: &Props) -> Html {
 
             spawn_local(async move {
                 match if let Some(slug) = slug {
-                    ApiService::_update_post(&slug, &content).await
+                    ApiService::_update_post(&slug, &content, &title).await
                 } else {
                     ApiService::create_post(&title, &content).await
                 } {
                     Ok(slug) => {
-                        yew_router::history::BrowserHistory::new()
-                            .push(AppRoute::Post { slug }.to_path());
+                        if let Some(window) = web_sys::window() {
+                            let _ = window.location().replace(&format!("/post/{}", slug));
+                        }
                     }
                     Err(err) => api_error_cb.emit(err),
                 }
@@ -159,7 +149,7 @@ fn edit_page(props: &Props) -> Html {
     };
 
     let parser = Parser::new_ext(
-        &*content,
+        &content,
         Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
     );
 
@@ -177,9 +167,9 @@ fn edit_page(props: &Props) -> Html {
                 <div class="editor-bar">
                     <div class="clickable" onclick={on_toggle_preview}>
                         if *preview {
-                            <i class="fas fa-pencil icon"></i> { "Edit" }
+                            <i class="icon-pencil icon"></i> { "Edit" }
                         } else {
-                            <i class="fas fa-eye icon"></i> { "Preview" }
+                            <i class="icon-eye icon"></i> { "Preview" }
                         }
                     </div>
                     <button disabled={title.is_empty() || content.is_empty()}
