@@ -3,14 +3,15 @@ use common::PostsQueryParams;
 
 use crate::{database::DBHandler, utils::create_rss_feed, Config};
 
-pub async fn rss_feed_handler<T: DBHandler>(
+async fn generate_rss<T: DBHandler>(
     db_handler: web::Data<T>,
     config: web::Data<Config>,
+    per_page: u64,
 ) -> impl Responder {
     if let Ok(latest_posts) = db_handler
         .get_posts(&PostsQueryParams {
             page: Some(1),
-            per_page: Some(10),
+            per_page: Some(per_page),
             sort_by: Some("published_at".to_string()),
             sort_order: Some("desc".to_string()),
         })
@@ -24,4 +25,18 @@ pub async fn rss_feed_handler<T: DBHandler>(
     }
 
     HttpResponse::InternalServerError().finish()
+}
+
+pub async fn rss_feed_handler<T: DBHandler>(
+    db_handler: web::Data<T>,
+    config: web::Data<Config>,
+) -> impl Responder {
+    generate_rss(db_handler, config, 10).await
+}
+
+pub async fn rss_sitemap_handler<T: DBHandler>(
+    db_handler: web::Data<T>,
+    config: web::Data<Config>,
+) -> impl Responder {
+    generate_rss(db_handler, config, 9999999).await
 }

@@ -86,6 +86,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(config.clone())) // Config env variables
             .app_data(Data::new(highlighter.clone()))
             .service(web::resource("/rss").get(handlers::rss_feed_handler::<MongoDBHandler>))
+            .service(web::resource("/sitemap").get(handlers::rss_sitemap_handler::<MongoDBHandler>))
             .service(
                 web::scope("/api")
                     .service(
