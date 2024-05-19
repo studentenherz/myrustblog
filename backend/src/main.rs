@@ -6,7 +6,7 @@ use actix_web::{
     http::header,
     middleware::{Logger, NormalizePath},
     web::{self, Data},
-    App, HttpServer,
+    App, HttpResponse, HttpServer,
 };
 use actix_web_lab::web::spa;
 
@@ -136,6 +136,14 @@ async fn main() -> std::io::Result<()> {
                 web::resource("/delete/{slug}")
                     .get(handlers::delete_post_and_redirect::<MongoDBHandler>),
             )
+            .service(web::resource("/robots.txt").get(|| async {
+                match std::fs::read_to_string("./dist/static/robots.txt") {
+                    Ok(robots_txt) => HttpResponse::Ok()
+                        .content_type("text/plain")
+                        .body(robots_txt),
+                    Err(_) => HttpResponse::NotFound().finish(),
+                }
+            }))
             .service(
                 spa()
                     .index_file("./dist/index.html")
