@@ -40,3 +40,12 @@ pub async fn rss_sitemap_handler<T: DBHandler>(
 ) -> impl Responder {
     generate_rss(db_handler, config, 9999999).await
 }
+
+pub async fn robots(config: web::Data<Config>) -> impl Responder {
+    match std::fs::read_to_string("./dist/static/robots.txt") {
+        Ok(robots_txt) => HttpResponse::Ok()
+            .content_type("text/plain")
+            .body(robots_txt + &format!("Sitemap: {}/sitemap", config.WEBSITE_URL)),
+        Err(_) => HttpResponse::NotFound().finish(),
+    }
+}
