@@ -41,7 +41,11 @@ pub fn get_summary(html_text: &str, max_len: usize) -> String {
 
     let parser = Parser::new_ext(
         html_text,
-        Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+        Options::ENABLE_TABLES
+            | Options::ENABLE_TASKLISTS
+            | Options::ENABLE_FOOTNOTES
+            | Options::ENABLE_MATH
+            | Options::ENABLE_GFM,
     );
     let mut in_p = false;
 

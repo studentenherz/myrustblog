@@ -150,7 +150,11 @@ fn edit_page(props: &Props) -> Html {
 
     let parser = Parser::new_ext(
         &content,
-        Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+        Options::ENABLE_TABLES
+            | Options::ENABLE_TASKLISTS
+            | Options::ENABLE_FOOTNOTES
+            | Options::ENABLE_MATH
+            | Options::ENABLE_GFM,
     );
 
     let mut html_out = String::new();

@@ -10,7 +10,11 @@ use common::{utils::title_to_slug, Header};
 pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header>, String) {
     let parser = Parser::new_ext(
         html_text,
-        Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_FOOTNOTES,
+        Options::ENABLE_TABLES
+            | Options::ENABLE_TASKLISTS
+            | Options::ENABLE_FOOTNOTES
+            | Options::ENABLE_MATH
+            | Options::ENABLE_GFM,
     );
 
     let mut headers: Vec<Header> = vec![];
