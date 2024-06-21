@@ -750,3 +750,16 @@ dialog[open] {
         }
     }
 }
+
+figure {
+    margin: 20px 0;
+
+    figcaption {
+        margin: 20px 0;
+
+        &::before {
+            content: "Figure " counter(figureCounter) ": ";
+            counter-increment: figureCounter;
+        }
+    }
+}
