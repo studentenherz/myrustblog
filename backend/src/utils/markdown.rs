@@ -1,3 +1,4 @@
+use katex;
 use std::collections::HashMap;
 
 use pulldown_cmark::{
@@ -68,6 +69,21 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
             Event::Text(text) if in_header => {
                 header_text.push_str(&text);
                 Event::Text(text)
+            }
+            Event::InlineMath(ref tex) => {
+                if let Ok(parsed) = katex::render(tex) {
+                    return Event::Html(parsed.into());
+                }
+
+                event
+            }
+            Event::DisplayMath(ref tex) => {
+                let opts = katex::Opts::builder().display_mode(true).build().unwrap();
+                if let Ok(parsed) = katex::render_with_opts(tex, opts) {
+                    return Event::Html(parsed.into());
+                }
+
+                event
             }
             _ => event,
         })

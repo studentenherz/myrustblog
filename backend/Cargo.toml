@@ -31,3 +31,4 @@ actix-files = "0.6.5"
 pulldown-cmark = { version = "0.11", default-features = false, features = [
     "html",
 ] }
+katex = "0.4.6"
