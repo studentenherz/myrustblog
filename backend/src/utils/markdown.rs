@@ -1,4 +1,3 @@
-use katex;
 use std::collections::HashMap;
 
 use pulldown_cmark::{
