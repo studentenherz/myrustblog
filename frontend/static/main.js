@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
     const highlightCurrent = (entries) => {
-        console.log(entries)
-
         entries.forEach(({isIntersecting, target}) => {
             if (isIntersecting) {
                 document.getElementById(`ct-${target.id}`).classList.add("current")
