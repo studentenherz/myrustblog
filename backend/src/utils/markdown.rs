@@ -8,15 +8,6 @@ use crate::utils::Highlighter;
 use common::{utils::title_to_slug, Header};
 
 pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header>, String) {
-    let parser = Parser::new_ext(
-        html_text,
-        Options::ENABLE_TABLES
-            | Options::ENABLE_TASKLISTS
-            | Options::ENABLE_FOOTNOTES
-            | Options::ENABLE_MATH
-            | Options::ENABLE_GFM,
-    );
-
     let mut headers: Vec<Header> = vec![];
     let mut in_header = false;
     let mut header_level: HeadingLevel = HeadingLevel::H1;
@@ -27,103 +18,95 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
 
     let mut section_headers_sack: Vec<HeadingLevel> = vec![];
 
-    let parser: Vec<Event> = parser
-        .filter_map(|event| match event {
-            Event::Start(Tag::Heading {
-                level,
-                id,
-                classes: _,
-                attrs: _,
-            }) => {
-                in_header = true;
-                header_level = level;
-                header_text = String::new();
-
-                let _id = if id.is_some() {
-                    id
-                } else {
-                    idn += 1;
-                    Some(format!("{}-{}", id_prefix, idn).into())
-                };
-
-                None
-            }
-            Event::End(TagEnd::Heading(_)) => {
-                in_header = false;
-
-                let id = title_to_slug(&header_text);
-                id_map.insert(format!("{}-{}", id_prefix, idn).into(), id.clone().into());
-
-                headers.push(Header {
-                    level: header_level,
-                    text: header_text.clone(),
-                    id: id.clone(),
-                });
-
-                let mut new_header = String::new();
-
-                while let Some(last_level) = section_headers_sack.last() {
-                    if header_level <= *last_level {
-                        new_header += "</section>\n"; // Close section
-                        section_headers_sack.pop();
-                    } else {
-                        break;
-                    }
-                }
-                section_headers_sack.push(header_level);
-
-                new_header += &format!("<section id={}>\n", id);
-                new_header += &format!(
-                    "<h{}>{}</h{}>",
-                    header_level as u8, header_text, header_level as u8
-                );
-
-                Some(Event::Html(new_header.into()))
-            }
-            Event::Text(text) if in_header => {
-                header_text.push_str(&text);
-                None
-            }
-            Event::InlineMath(ref tex) => {
-                if let Ok(parsed) = katex::render(tex) {
-                    return Some(Event::Html(parsed.into()));
-                }
-
-                Some(event)
-            }
-            Event::DisplayMath(ref tex) => {
-                let opts = katex::Opts::builder().display_mode(true).build().unwrap();
-                if let Ok(parsed) = katex::render_with_opts(tex, opts) {
-                    return Some(Event::Html(parsed.into()));
-                }
-
-                Some(event)
-            }
-            _ => Some(event),
-        })
-        .collect();
-
-    let mut in_codeblock = false;
-    let mut lang = "";
-    let mut code_cum = String::new();
-    let parser = parser.iter().filter_map(|event| match event {
+    let mut parser: Vec<Event> = vec![];
+    Parser::new_ext(
+        html_text,
+        Options::ENABLE_TABLES
+            | Options::ENABLE_TASKLISTS
+            | Options::ENABLE_FOOTNOTES
+            | Options::ENABLE_MATH
+            | Options::ENABLE_GFM,
+    )
+    .for_each(|event| match event {
         Event::Start(Tag::Heading {
             level,
             id,
             classes,
             attrs,
         }) => {
-            let id = id
-                .clone()
-                .map(|id_val| id_map.get(&id_val).unwrap_or(&id_val).clone());
+            in_header = true;
+            header_level = level;
+            header_text = String::new();
 
-            Some(Event::Start(Tag::Heading {
-                level: *level,
-                id,
-                classes: classes.clone(),
-                attrs: attrs.clone(),
+            let id = if id.is_some() {
+                id
+            } else {
+                idn += 1;
+                Some(format!("{}-{}", id_prefix, idn).into())
+            };
+
+            let mut section_enclose = String::new();
+
+            while let Some(last_level) = section_headers_sack.last() {
+                if header_level <= *last_level {
+                    section_enclose += "</section>\n"; // Close section
+                    section_headers_sack.pop();
+                } else {
+                    break;
+                }
+            }
+            section_headers_sack.push(header_level);
+
+            section_enclose += &format!("<section id={}>\n", id.clone().unwrap_or("id_err".into()));
+            parser.push(Event::Html(section_enclose.into()));
+
+            parser.push(Event::Start(Tag::Heading {
+                level,
+                id: None,
+                classes,
+                attrs,
             }))
         }
+        Event::End(TagEnd::Heading(_)) => {
+            in_header = false;
+
+            let id = title_to_slug(&header_text);
+            id_map.insert(format!("{}-{}", id_prefix, idn).into(), id.clone().into());
+
+            headers.push(Header {
+                level: header_level,
+                text: header_text.clone(),
+                id: id.clone(),
+            });
+
+            parser.push(event)
+        }
+        Event::Text(ref text) if in_header => {
+            header_text.push_str(text);
+            parser.push(event)
+        }
+        Event::InlineMath(ref tex) => {
+            if let Ok(parsed) = katex::render(tex) {
+                parser.push(Event::Html(parsed.into()));
+            } else {
+                parser.push(event)
+            }
+        }
+        Event::DisplayMath(ref tex) => {
+            let opts = katex::Opts::builder().display_mode(true).build().unwrap();
+            if let Ok(parsed) = katex::render_with_opts(tex, opts) {
+                parser.push(Event::Html(parsed.into()));
+            } else {
+                parser.push(event)
+            }
+        }
+        _ => parser.push(event),
+    });
+
+    let mut in_codeblock = false;
+    let mut lang = "";
+    let mut code_cum = String::new();
+    let parser = parser.iter().filter_map(|event| match event {
         Event::Start(Tag::CodeBlock(cb)) => {
             in_codeblock = true;
             lang = match cb {
@@ -158,6 +141,10 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
 
     let mut html_string = String::new();
     html::push_html(&mut html_string, parser);
+
+    id_map.into_iter().for_each(|(from, to)| {
+        html_string = html_string.replace(from.as_ref(), &to);
+    });
 
     for _ in 0..section_headers_sack.len() {
         html_string += "</section>\n";
