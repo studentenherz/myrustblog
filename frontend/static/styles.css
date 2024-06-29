@@ -369,19 +369,19 @@ time {
         }
 
         .header-H2 {
-            margin-left: 2ch;
+            padding-left: 2ch;
         }
         .header-H3 {
-            margin-left: 4ch;
+            padding-left: 4ch;
         }
         .header-H4 {
-            margin-left: 6ch;
+            padding-left: 6ch;
         }
         .header-H5 {
-            margin-left: 8ch;
+            padding-left: 8ch;
         }
         .header-H6 {
-            margin-left: 10ch;
+            padding-left: 10ch;
         }
 
         ul {
@@ -394,7 +394,13 @@ time {
         }
 
         li {
-            padding-top: 10px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            border-right: 2px solid transparent;
+
+            &.current {
+                border-right: 2px solid;
+            }
         }
     }
 }

@@ -45,7 +45,7 @@ pub fn post_page(
                     <h2>{"Contents"}</h2>
                     <ul>
                         { for headers.iter().map(|header| html! {
-                            <li class={format!("header-{:?}", header.level)}>
+                            <li id={format!("ct-{}", header.id.clone())} class={format!("header-{:?}", header.level)}>
                                 <a href={format!("#{}", header.id.clone())}>{ header.text.clone() }</a>
                             </li>
                         }) }
