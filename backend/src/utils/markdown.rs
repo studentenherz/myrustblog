@@ -143,7 +143,7 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
     html::push_html(&mut html_string, parser);
 
     id_map.into_iter().for_each(|(from, to)| {
-        html_string = html_string.replace(from.as_ref(), &to);
+        html_string = html_string.replacen(from.as_ref(), &to, 1);
     });
 
     for _ in 0..section_headers_sack.len() {
