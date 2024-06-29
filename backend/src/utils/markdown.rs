@@ -25,31 +25,28 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
     let mut id_map = HashMap::<CowStr, CowStr>::new();
     let id_prefix = "heading-id312";
 
+    let mut section_headers_sack: Vec<HeadingLevel> = vec![];
+
     let parser: Vec<Event> = parser
-        .map(|event| match event {
+        .filter_map(|event| match event {
             Event::Start(Tag::Heading {
                 level,
                 id,
-                classes,
-                attrs,
+                classes: _,
+                attrs: _,
             }) => {
                 in_header = true;
                 header_level = level;
                 header_text = String::new();
 
-                let id = if id.is_some() {
+                let _id = if id.is_some() {
                     id
                 } else {
                     idn += 1;
                     Some(format!("{}-{}", id_prefix, idn).into())
                 };
 
-                Event::Start(Tag::Heading {
-                    level,
-                    id,
-                    classes,
-                    attrs,
-                })
+                None
             }
             Event::End(TagEnd::Heading(_)) => {
                 in_header = false;
@@ -60,31 +57,49 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
                 headers.push(Header {
                     level: header_level,
                     text: header_text.clone(),
-                    id,
+                    id: id.clone(),
                 });
 
-                event
+                let mut new_header = String::new();
+
+                while let Some(last_level) = section_headers_sack.last() {
+                    if header_level <= *last_level {
+                        new_header += "</section>\n"; // Close section
+                        section_headers_sack.pop();
+                    } else {
+                        break;
+                    }
+                }
+                section_headers_sack.push(header_level);
+
+                new_header += &format!("<section id={}>\n", id);
+                new_header += &format!(
+                    "<h{}>{}</h{}>",
+                    header_level as u8, header_text, header_level as u8
+                );
+
+                Some(Event::Html(new_header.into()))
             }
             Event::Text(text) if in_header => {
                 header_text.push_str(&text);
-                Event::Text(text)
+                None
             }
             Event::InlineMath(ref tex) => {
                 if let Ok(parsed) = katex::render(tex) {
-                    return Event::Html(parsed.into());
+                    return Some(Event::Html(parsed.into()));
                 }
 
-                event
+                Some(event)
             }
             Event::DisplayMath(ref tex) => {
                 let opts = katex::Opts::builder().display_mode(true).build().unwrap();
                 if let Ok(parsed) = katex::render_with_opts(tex, opts) {
-                    return Event::Html(parsed.into());
+                    return Some(Event::Html(parsed.into()));
                 }
 
-                event
+                Some(event)
             }
-            _ => event,
+            _ => Some(event),
         })
         .collect();
 
@@ -143,6 +158,10 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
 
     let mut html_string = String::new();
     html::push_html(&mut html_string, parser);
+
+    for _ in 0..section_headers_sack.len() {
+        html_string += "</section>\n";
+    }
 
     (headers, html_string)
 }
