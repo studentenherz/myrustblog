@@ -332,6 +332,10 @@ time {
             padding-top: 0;
             margin-top: 0;
         }
+
+		img {
+			max-width: 100%;
+		}
     }
 
     .post-edit-bar {
@@ -761,7 +765,7 @@ dialog[open] {
 }
 
 figure {
-    margin: 20px 0;
+    margin: 40px 0;
 
     figcaption {
         margin: 20px 0;
