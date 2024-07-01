@@ -21,6 +21,7 @@ async fn get_full_html<T: DBHandler>(
     db_handler: &T,
     title: &str,
     description: &str,
+    slug: &str,
 ) -> String {
     let index_html_string = include_str!("../../index.html");
 
@@ -46,6 +47,10 @@ async fn get_full_html<T: DBHandler>(
 
     index_html_string
         .replace("</title>", &format!("{}</title>", title))
+        .replace(
+            r#"url" content="https://blog.studentenherz.dev""#,
+            &format!(r#"url" content="https://blog.studentenherz.dev/{}""#, slug),
+        )
         .replace(
             r#"title" content=""#,
             &format!(r#"title" content="{}"#, title),
@@ -76,6 +81,7 @@ pub async fn yew_home<T: DBHandler>(
                 db_handler.as_ref(),
                 "Studentenherz's Blog",
                 "A blogging website made with Rust, using Yew and Actix Web.",
+                "",
             )
             .await,
         )
@@ -109,7 +115,17 @@ pub async fn yew_blog<T: DBHandler>(
 
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(get_full_html(&content, &user, db_handler.as_ref(), title, description).await)
+        .body(
+            get_full_html(
+                &content,
+                &user,
+                db_handler.as_ref(),
+                title,
+                description,
+                "blog",
+            )
+            .await,
+        )
 }
 
 pub async fn yew_post<T: DBHandler>(
@@ -140,17 +156,19 @@ pub async fn yew_post<T: DBHandler>(
             let (headers, html_string) = parse_markdown(&post.content, &highlighter);
             title = post.title.clone();
             description = get_summary(&post.content, MAX_SUMMARY_SIZE);
-
-            content = ServerRenderer::<PostPage>::with_props(move || PostProps {
-                slug: slug.clone().into(),
-                post: Arc::new(post),
-                post_content: html_string.into(),
-                headers,
-                user,
-            })
-            .hydratable(false)
-            .render()
-            .await;
+            {
+                let slug = slug.clone();
+                content = ServerRenderer::<PostPage>::with_props(move || PostProps {
+                    slug: slug.into(),
+                    post: Arc::new(post),
+                    post_content: html_string.into(),
+                    headers,
+                    user,
+                })
+                .hydratable(false)
+                .render()
+                .await;
+            }
         } else {
             return HttpResponse::NotFound().finish();
         }
@@ -165,6 +183,7 @@ pub async fn yew_post<T: DBHandler>(
                 db_handler.as_ref(),
                 &title,
                 &description,
+                &format!("post/{}", slug),
             )
             .await,
         )
