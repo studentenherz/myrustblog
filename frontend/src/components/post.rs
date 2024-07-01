@@ -46,7 +46,7 @@ pub fn post_page(
                     <ul>
                         { for headers.iter().map(|header| html! {
                             <li id={format!("ct-{}", header.id.clone())} class={format!("header-{:?}", header.level)}>
-                                <a href={format!("#{}", header.id.clone())}>{ header.text.clone() }</a>
+                                <a href={format!("#{}", header.id.clone())}>{ Html::from_html_unchecked(header.text.clone().into()) }</a>
                             </li>
                         }) }
                     </ul>

@@ -11,10 +11,11 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
     let mut headers: Vec<Header> = vec![];
     let mut in_header = false;
     let mut header_level: HeadingLevel = HeadingLevel::H1;
-    let mut header_text = String::new();
+    let mut header_plain_text = String::new();
     let mut idn = 0usize;
     let mut id_map = HashMap::<CowStr, CowStr>::new();
     let id_prefix = "heading-id312";
+    let mut header_content: Vec<Event> = vec![];
 
     let mut section_headers_sack: Vec<HeadingLevel> = vec![];
 
@@ -36,7 +37,8 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
         }) => {
             in_header = true;
             header_level = level;
-            header_text = String::new();
+            header_plain_text = String::new();
+            header_content.clear();
 
             let id = if id.is_some() {
                 id
@@ -70,7 +72,10 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
         Event::End(TagEnd::Heading(_)) => {
             in_header = false;
 
-            let id = title_to_slug(&header_text);
+            let mut header_text = String::new();
+            html::push_html(&mut header_text, header_content.clone().into_iter());
+
+            let id = title_to_slug(&header_plain_text);
             id_map.insert(format!("{}-{}", id_prefix, idn).into(), id.clone().into());
 
             headers.push(Header {
@@ -82,23 +87,40 @@ pub fn parse_markdown(html_text: &str, highlighter: &Highlighter) -> (Vec<Header
             parser.push(event)
         }
         Event::Text(ref text) if in_header => {
-            header_text.push_str(text);
-            parser.push(event)
+            header_plain_text.push_str(text);
+            parser.push(event.clone());
+            header_content.push(event);
         }
         Event::InlineMath(ref tex) => {
-            if let Ok(parsed) = katex::render(tex) {
-                parser.push(Event::Html(parsed.into()));
+            let new_event = if let Ok(parsed) = katex::render(tex) {
+                Event::Html(parsed.clone().into())
             } else {
-                parser.push(event)
+                event
+            };
+
+            if in_header {
+                header_content.push(new_event.clone());
             }
+
+            parser.push(new_event);
         }
         Event::DisplayMath(ref tex) => {
             let opts = katex::Opts::builder().display_mode(true).build().unwrap();
-            if let Ok(parsed) = katex::render_with_opts(tex, opts) {
-                parser.push(Event::Html(parsed.into()));
+            let new_event = if let Ok(parsed) = katex::render_with_opts(tex, opts) {
+                Event::Html(parsed.into())
             } else {
-                parser.push(event)
+                event
+            };
+
+            if in_header {
+                header_content.push(new_event.clone());
             }
+
+            parser.push(new_event);
+        }
+        _ if in_header => {
+            header_content.push(event.clone());
+            parser.push(event);
         }
         _ => parser.push(event),
     });
