@@ -311,6 +311,20 @@ time {
     position: relative;
     gap: 0 20px;
     font-size: large;
+    counter-reset: figureCounter;
+
+    figure {
+        margin: 40px 0;
+
+        figcaption {
+            margin: 20px 0;
+
+            &::before {
+                content: "Figure " counter(figureCounter) ": ";
+                counter-increment: figureCounter;
+            }
+        }
+    }
 
     .post {
         grid-column: 3 / span 6;
@@ -760,19 +774,6 @@ dialog[open] {
         &:hover {
             color: var(--dark-fg-color);
             background-color: var(--parenthesis-color);
-        }
-    }
-}
-
-figure {
-    margin: 40px 0;
-
-    figcaption {
-        margin: 20px 0;
-
-        &::before {
-            content: "Figure " counter(figureCounter) ": ";
-            counter-increment: figureCounter;
         }
     }
 }
