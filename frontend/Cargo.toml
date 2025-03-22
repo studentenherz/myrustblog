@@ -7,22 +7,22 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-dotenv = "0.15.0"
+dotenv = "0.15"
 
 [dependencies]
 common = { path = "../common" }
-gloo-net = "0.5.0"
-log = "0.4.20"
-pulldown-cmark = { version = "0.11", default-features = false, features = [
+gloo-net = "0.6"
+log = "0.4"
+pulldown-cmark = { version = "0.13", default-features = false, features = [
     "html",
 ] }
-reqwest = { version = "0.12.3", default-features = false }
-serde = { version = "1.0.196", features = ["derive"] }
-serde_json = "1.0.115"
-wasm-bindgen = "0.2.91"
-wasm-bindgen-futures = "0.4.41"
-wasm-logger = "0.2.0"
-web-sys = { version = "0.3.68", features = [
+reqwest = { version = "0.12", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+wasm-logger = "0.2"
+web-sys = { version = "0.3", features = [
     "HtmlInputElement",
     "Document",
     "Window",
@@ -30,6 +30,6 @@ web-sys = { version = "0.3.68", features = [
     "Performance",
     "HtmlDialogElement",
 ] }
-yew = { version = "0.21.0", features = ["csr"] }
-yew-router = "0.18.0"
-yewdux = "0.10.0"
+yew = { version = "0.21", features = ["csr"] }
+yew-router = "0.18"
+yewdux = "0.11"

@@ -1,10 +1,10 @@
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{distr::Alphanumeric, Rng};
 
 use crate::database::DBHandler;
 use common::utils::title_to_slug;
 
 pub fn generate_random_alphanumeric_str(len: usize) -> String {
-    let rng = rand::thread_rng();
+    let rng = rand::rng();
     rng.sample_iter(&Alphanumeric)
         .take(len)
         .map(char::from)
