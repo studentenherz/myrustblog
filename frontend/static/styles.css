@@ -206,7 +206,7 @@ button,
 .blog-posts-list {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 6fr 1fr;
+    grid-template-columns: 2fr 6fr 2fr;
     gap: 20px;
 }
 
@@ -215,7 +215,6 @@ button,
     gap: 20px;
     grid-column: 2;
     display: grid;
-    grid-template-columns: 1fr 1fr;
     grid-auto-flow: row;
 }
 
