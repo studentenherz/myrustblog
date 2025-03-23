@@ -19,12 +19,17 @@ pub enum ApiError {
 pub struct ApiService;
 
 impl ApiService {
-    pub async fn create_post(title: &str, content: &str) -> Result<String, ApiError> {
+    pub async fn create_post(
+        title: &str,
+        content: &str,
+        summary: Option<&str>,
+    ) -> Result<String, ApiError> {
         if let Ok(builder) = AuthService::protected_post(&api_url!("/post/create")) {
             if let Ok(response) = builder
                 .json(&CreatePostRequest {
                     title: String::from(title),
                     content: String::from(content),
+                    summary: summary.map(String::from),
                 })
                 .unwrap()
                 .send()
@@ -56,13 +61,19 @@ impl ApiService {
         Err(ApiError::RequestError)
     }
 
-    pub async fn _update_post(slug: &str, content: &str, title: &str) -> Result<String, ApiError> {
+    pub async fn _update_post(
+        slug: &str,
+        content: &str,
+        title: &str,
+        summary: Option<&str>,
+    ) -> Result<String, ApiError> {
         if let Ok(builder) = AuthService::protected_post(&api_url!("/post/update")) {
             if let Ok(response) = builder
                 .json(&UpdatePostRequest {
                     slug: String::from(slug),
                     content: String::from(content),
                     title: String::from(title),
+                    summary: summary.map(String::from),
                 })
                 .unwrap()
                 .send()

@@ -5,7 +5,47 @@ use chrono::{DateTime, Utc};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
-pub use common::{Post, PostsQueryParams};
+pub use common::PostsQueryParams;
+
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone)]
+pub struct PostModel {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
+    pub slug: String,
+    pub title: String,
+    pub content: String,
+    pub summary: Option<String>,
+    pub author: String,
+    #[serde(with = "chrono_datetime_as_bson_datetime")]
+    pub published_at: DateTime<Utc>,
+}
+
+impl From<PostModel> for common::Post {
+    fn from(value: PostModel) -> Self {
+        Self {
+            slug: value.slug,
+            title: value.title,
+            content: value.content,
+            summary: value.summary,
+            author: value.author,
+            published_at: value.published_at,
+        }
+    }
+}
+
+impl From<common::Post> for PostModel {
+    fn from(value: common::Post) -> Self {
+        Self {
+            id: None,
+            slug: value.slug,
+            title: value.title,
+            content: value.content,
+            summary: value.summary,
+            author: value.author,
+            published_at: value.published_at,
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserRegistration {

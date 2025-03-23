@@ -1,4 +1,3 @@
-use bson::{oid::ObjectId, serde_helpers::chrono_datetime_as_bson_datetime};
 use chrono::{DateTime, Utc};
 use pulldown_cmark::HeadingLevel;
 use serde::{Deserialize, Serialize};
@@ -9,6 +8,7 @@ pub mod utils;
 pub struct CreatePostRequest {
     pub title: String,
     pub content: String,
+    pub summary: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -21,17 +21,16 @@ pub struct UpdatePostRequest {
     pub slug: String,
     pub content: String,
     pub title: String,
+    pub summary: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone)]
 pub struct Post {
-    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<ObjectId>,
     pub slug: String,
     pub title: String,
     pub content: String,
+    pub summary: Option<String>,
     pub author: String,
-    #[serde(with = "chrono_datetime_as_bson_datetime")]
     pub published_at: DateTime<Utc>,
 }
 

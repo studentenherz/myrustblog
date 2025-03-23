@@ -12,7 +12,8 @@ const MAX_CONTENT_PREVIEW_LENGTH: usize = 150;
 
 #[function_component(PostCard)]
 pub fn post_card(Props { post }: &Props) -> Html {
-    let summary = get_summary(&post.content, MAX_CONTENT_PREVIEW_LENGTH);
+    let generated_summary = get_summary(&post.content, MAX_CONTENT_PREVIEW_LENGTH);
+    let summary = post.summary.as_deref().unwrap_or(&generated_summary);
 
     html! {
         <div class="post-card" >

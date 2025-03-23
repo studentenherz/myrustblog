@@ -2,12 +2,8 @@ use actix_identity::Identity;
 use actix_web::{web, HttpResponse, Responder};
 use chrono::Utc;
 
-use crate::{
-    database::DBHandler,
-    models::{Post, PostsQueryParams},
-    utils::generate_unique_slug,
-};
-use common::{CreatePostRequest, GetPostsResponse, PostCreatedResponse, UpdatePostRequest};
+use crate::{database::DBHandler, models::PostsQueryParams, utils::generate_unique_slug};
+use common::{CreatePostRequest, GetPostsResponse, Post, PostCreatedResponse, UpdatePostRequest};
 
 pub async fn create_post<T: DBHandler>(
     db_handler: web::Data<T>,
@@ -21,10 +17,10 @@ pub async fn create_post<T: DBHandler>(
                     if let Ok(slug) = generate_unique_slug(db_handler.as_ref(), &post.title).await {
                         if db_handler
                             .create_post(&Post {
-                                id: None,
                                 slug: slug.clone(),
                                 title: post.title.clone(),
                                 content: post.content.clone(),
+                                summary: post.summary.clone(),
                                 author: user_id,
                                 published_at: Utc::now(),
                             })
@@ -55,7 +51,12 @@ pub async fn update_post<T: DBHandler>(
             match db_result {
                 Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
                     if db_handler
-                        .update_post(&post.slug, &post.content, &post.title)
+                        .update_post(
+                            &post.slug,
+                            &post.content,
+                            &post.title,
+                            post.summary.as_deref(),
+                        )
                         .await
                         .is_ok()
                     {

@@ -29,34 +29,37 @@ pub fn blog(BlogProps { page, pages, posts }: &BlogProps) -> Html {
     };
 
     html! {
-        <div class="blog-posts-list">
-            <div class="posts-container">
-                { for posts.iter().map(|post| html! {
-                    <PostCard post={post.clone()} />
-                }) }
+        <>
+            <h1> { "My Blog posts" } </h1>
+            <div class="blog-posts-list">
+                <div class="posts-container">
+                    { for posts.iter().map(|post| html! {
+                        <PostCard post={post.clone()} />
+                    }) }
+                </div>
+                <div class="posts-container-navigation">
+                    if let Some(prev_url) = prev_page_url {
+                        <a href={ prev_url }>
+                            <i class="icon-left icon"></i> { "Previous page" }
+                        </a>
+                    } else {
+                        <span class="disabled">
+                            <i class="icon-left icon"></i> { "Previous page" }
+                        </span>
+                    }
+                    <div>{ page } { " / " }  {pages} </div>
+                    if let Some(next_url) = next_page_url {
+                        <a href={ next_url }>
+                            { "Next page" } <i class="icon-right icon"></i>
+                        </a>
+                    }
+                    else {
+                        <span class="disabled">
+                            { "Next page" } <i class="icon-right icon"></i>
+                        </span>
+                    }
+                </div>
             </div>
-            <div class="posts-container-navigation">
-                if let Some(prev_url) = prev_page_url {
-                    <a href={ prev_url }>
-                        <i class="icon-left icon"></i> { "Previous page" }
-                    </a>
-                } else {
-                    <span class="disabled">
-                        <i class="icon-left icon"></i> { "Previous page" }
-                    </span>
-                }
-                <div>{ page } { " / " }  {pages} </div>
-                if let Some(next_url) = next_page_url {
-                    <a href={ next_url }>
-                        { "Next page" } <i class="icon-right icon"></i>
-                    </a>
-                }
-                else {
-                    <span class="disabled">
-                        { "Next page" } <i class="icon-right icon"></i>
-                    </span>
-                }
-            </div>
-        </div>
+        </>
     }
 }

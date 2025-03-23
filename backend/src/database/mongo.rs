@@ -12,13 +12,14 @@ use super::{
     user::{UnconfirmedUserDb, UserDb},
     DBHandler,
 };
-use crate::models::{Post, PostsQueryParams, UnconfirmedUser, User};
+use crate::models::{PostModel, PostsQueryParams, UnconfirmedUser, User};
+use common::Post;
 
 #[derive(Clone)]
 pub struct MongoDBHandler {
     user_collection: mongodb::Collection<User>,
     unconfirmed_user_collection: mongodb::Collection<UnconfirmedUser>,
-    post_collection: mongodb::Collection<Post>,
+    post_collection: mongodb::Collection<PostModel>,
 }
 
 impl MongoDBHandler {
@@ -34,7 +35,7 @@ impl MongoDBHandler {
         let user_collection = db_client.collection::<User>("users");
         let unconfirmed_user_collection =
             db_client.collection::<UnconfirmedUser>("unconfirmed_users");
-        let post_collection = db_client.collection::<Post>("posts");
+        let post_collection = db_client.collection::<PostModel>("posts");
 
         let options = IndexOptions::builder()
             .expire_after(std::time::Duration::from_secs(24 * 60 * 60))
@@ -137,7 +138,11 @@ impl UnconfirmedUserDb for MongoDBHandler {
 
 impl PostDb for MongoDBHandler {
     async fn create_post(&self, post: &Post) -> Result<(), ()> {
-        match self.post_collection.insert_one(post).await {
+        match self
+            .post_collection
+            .insert_one(PostModel::from(post.clone()))
+            .await
+        {
             Ok(_) => Ok(()),
             Err(_) => Err(()),
         }
@@ -148,12 +153,13 @@ impl PostDb for MongoDBHandler {
         slug: &str,
         updated_content: &str,
         updated_title: &str,
+        updated_summary: Option<&str>,
     ) -> Result<u64, ()> {
         match self
             .post_collection
             .update_one(
                 doc! {"slug": slug},
-                doc! {"$set": doc! {"content": updated_content, "title": updated_title}},
+                doc! {"$set": doc! {"content": updated_content, "title": updated_title, "summary": updated_summary}},
             )
             .await
         {
@@ -170,10 +176,11 @@ impl PostDb for MongoDBHandler {
     }
 
     async fn get_post(&self, slug: &str) -> Result<Option<Post>, ()> {
-        self.post_collection
-            .find_one(doc! {"slug": slug})
-            .await
-            .or(Err(()))
+        match self.post_collection.find_one(doc! {"slug": slug}).await {
+            Ok(Some(post)) => Ok(Some(post.into())),
+            Ok(None) => Ok(None),
+            Err(_) => Err(()),
+        }
     }
 
     async fn get_posts(&self, query: &PostsQueryParams) -> Result<Vec<Post>, ()> {
@@ -201,8 +208,13 @@ impl PostDb for MongoDBHandler {
             .sort(sort_option)
             .await
         {
-            if let Ok(v) = cursor.try_collect().await {
-                return Ok(v);
+            match cursor.try_collect::<Vec<PostModel>>().await {
+                Ok(v) => {
+                    return Ok(v.into_iter().map(|post| post.into()).collect());
+                }
+                Err(e) => {
+                    println!("Error: {}", e);
+                }
             }
         }
 

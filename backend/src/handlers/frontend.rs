@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use actix_identity::Identity;
 use actix_web::{web, HttpResponse, Responder};
-use common::utils::get_summary;
-use common::Post;
-use common::PostsQueryParams;
+use common::{utils::get_summary, Post, PostsQueryParams};
 use yew::ServerRenderer;
 
 use crate::{
@@ -97,6 +95,7 @@ pub async fn yew_blog<T: DBHandler>(
     let description = "A blogging website made with Rust, using Yew and Actix Web.";
 
     if let Ok(posts) = db_handler.get_posts(&query).await {
+        println!("Posts: {:?}", posts);
         let posts: Vec<Arc<Post>> = posts.into_iter().map(Arc::new).collect();
         if let Ok(pages) = db_handler
             .calculate_total_pages(query.per_page.unwrap_or(10))

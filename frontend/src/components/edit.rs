@@ -16,25 +16,25 @@ struct Props {
     slug: Option<String>,
 }
 
-const CHARS_PER_LINE: u32 = 80;
-
 #[function_component(EditPage)]
 fn edit_page(props: &Props) -> Html {
     let title = use_state(String::new);
     let content = use_state(String::new);
+    let summary = use_state(String::new);
     let preview = use_state(|| false);
-    let content_rows = use_state(|| 2);
 
     let slug = props.slug.clone();
 
     {
         let title = title.clone();
         let content = content.clone();
+        let summary = summary.clone();
         let slug = slug.clone();
 
         use_effect_with(slug, move |slug| {
             let title = title.clone();
             let content = content.clone();
+            let summary = summary.clone();
 
             if let Some(slug) = slug.clone() {
                 spawn_local(async move {
@@ -43,6 +43,7 @@ fn edit_page(props: &Props) -> Html {
                             set_title(&format!("Edit | {}", &post.title));
                             title.set(post.title);
                             content.set(post.content);
+                            summary.set(post.summary.unwrap_or_default());
                         }
                         Ok(None) => yew_router::history::BrowserHistory::new().replace("/404"),
                         Err(_) => {
@@ -77,7 +78,19 @@ fn edit_page(props: &Props) -> Html {
         })
     };
 
-    let onkeydown = {
+    let on_summary_editor_input = {
+        let summary = summary.clone();
+        Callback::from(move |e: InputEvent| {
+            log::info!("{:?}", e);
+
+            if let Some(input) = e.target_dyn_into::<HtmlTextAreaElement>() {
+                let summary_value = input.value();
+                summary.set(summary_value);
+            }
+        })
+    };
+
+    let on_editor_keydown = {
         let content = content.clone();
         Callback::from(move |e: KeyboardEvent| {
             if e.key() == "Tab" {
@@ -101,17 +114,29 @@ fn edit_page(props: &Props) -> Html {
         })
     };
 
-    {
-        let content = content.clone();
-        let content_rows = content_rows.clone();
+    let on_summary_keydown = {
+        let summary = summary.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            if e.key() == "Tab" {
+                e.prevent_default();
 
-        use_effect_with(content, move |content| {
-            let rows = content.lines().fold(2, |acc, line| {
-                acc + (line.len() as u32 / CHARS_PER_LINE + 1)
-            });
-            content_rows.set(rows);
+                if let Some(target) = e.target_dyn_into::<HtmlTextAreaElement>() {
+                    let value = target.value();
+                    let start = target.selection_start().unwrap_or(Some(0)).unwrap_or(0) as usize;
+                    let end = target.selection_end().unwrap_or(Some(0)).unwrap_or(0) as usize;
+
+                    let new_value = format!("{}{}{}", &value[..start], "\t", &value[end..]);
+                    summary.set(new_value.clone());
+
+                    target.set_value(&new_value);
+                    target
+                        .set_selection_start(Some((start + 1) as u32))
+                        .unwrap();
+                    target.set_selection_end(Some((start + 1) as u32)).unwrap();
+                }
+            }
         })
-    }
+    };
 
     let on_toggle_preview = {
         let preview = preview.clone();
@@ -123,19 +148,40 @@ fn edit_page(props: &Props) -> Html {
     let on_publish = {
         let title = title.clone();
         let content = content.clone();
+        let summary = summary.clone();
         let slug = props.slug.clone();
 
         Callback::from(move |_| {
             let title = title.clone();
             let content = content.clone();
+            let summary = summary.clone();
             let api_error_cb = Callback::from(|err: ApiError| log::error!("{:?}", err));
             let slug = slug.clone();
 
             spawn_local(async move {
                 match if let Some(slug) = slug {
-                    ApiService::_update_post(&slug, &content, &title).await
+                    ApiService::_update_post(
+                        &slug,
+                        &content,
+                        &title,
+                        if !summary.is_empty() {
+                            Some(&summary)
+                        } else {
+                            None
+                        },
+                    )
+                    .await
                 } else {
-                    ApiService::create_post(&title, &content).await
+                    ApiService::create_post(
+                        &title,
+                        &content,
+                        if !summary.is_empty() {
+                            Some(&summary)
+                        } else {
+                            None
+                        },
+                    )
+                    .await
                 } {
                     Ok(slug) => {
                         if let Some(window) = web_sys::window() {
@@ -163,7 +209,7 @@ fn edit_page(props: &Props) -> Html {
     html! {
         <Layout>
             <div class="post-title">
-                <input id="title-input" type="text" placeholder={"Title..."}
+                <textarea id="title-input" type="text" placeholder={"Title..."}
                 value={(*title).clone()}
                 oninput={on_update_title}/>
             </div>
@@ -187,11 +233,16 @@ fn edit_page(props: &Props) -> Html {
                     </div>
                 } else {
                     <div class="md-editor">
+                        <textarea placeholder={"Write here the summary..." }
+                        rows={5}
+                        value={(*summary).clone()}
+                        oninput={on_summary_editor_input}
+                        onkeydown={on_summary_keydown}/>
                         <textarea placeholder={"Write your article here using markdown..."}
+                        rows={20}
                         value={(*content).clone()}
-                        rows={content_rows.to_string()}
                         oninput={on_editor_input}
-                        onkeydown={onkeydown}/>
+                        onkeydown={on_editor_keydown}/>
                     </div>
                 }
             </div>
