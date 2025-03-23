@@ -22,7 +22,6 @@ fn edit_page(props: &Props) -> Html {
     let content = use_state(String::new);
     let summary = use_state(String::new);
     let preview = use_state(|| false);
-
     let slug = props.slug.clone();
 
     {
@@ -57,11 +56,14 @@ fn edit_page(props: &Props) -> Html {
         });
     }
 
-    let on_update_title = {
+    let on_title_editor_input = {
         let title = title.clone();
         Callback::from(move |e: InputEvent| {
-            if let Some(input) = e.target_dyn_into::<HtmlInputElement>() {
-                title.set(input.value());
+            log::info!("{:?}", e);
+
+            if let Some(input) = e.target_dyn_into::<HtmlTextAreaElement>() {
+                let title_value = input.value();
+                title.set(title_value);
             }
         })
     };
@@ -211,7 +213,7 @@ fn edit_page(props: &Props) -> Html {
             <div class="post-title">
                 <textarea id="title-input" type="text" placeholder={"Title..."}
                 value={(*title).clone()}
-                oninput={on_update_title}/>
+                oninput={on_title_editor_input}/>
             </div>
             <div class="create-container">
                 <div class="editor-bar">
@@ -238,6 +240,7 @@ fn edit_page(props: &Props) -> Html {
                         value={(*summary).clone()}
                         oninput={on_summary_editor_input}
                         onkeydown={on_summary_keydown}/>
+
                         <textarea placeholder={"Write your article here using markdown..."}
                         rows={20}
                         value={(*content).clone()}
