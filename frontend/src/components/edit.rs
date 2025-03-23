@@ -1,6 +1,6 @@
 use pulldown_cmark::{html::push_html, Options, Parser};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{HtmlInputElement, HtmlTextAreaElement};
+use web_sys::HtmlTextAreaElement;
 use yew::prelude::*;
 use yew_router::history::History;
 
