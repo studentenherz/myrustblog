@@ -67,5 +67,9 @@ pub fn get_summary(html_text: &str, max_len: usize) -> String {
         }
     }
 
+    if summary.len() >= max_len {
+        summary += "...";
+    }
+
     summary
 }

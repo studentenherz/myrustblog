@@ -18,10 +18,10 @@ pub fn post_card(Props { post }: &Props) -> Html {
     html! {
         <div class="post-card" >
             <h2> { &post.title } </h2>
-            <p class="preview"> { summary } { "..." } </p>
+            <p class="preview"> { summary } </p>
             <div class="lower-strip">
                 <time datetime={post.published_at.to_rfc2822()}> { &post.published_at.format("%d %b %Y").to_string() } </time>
-                <a href={ format!("/post/{}", post.slug) } > { "see more..." } </a>
+                <a href={ format!("/post/{}", post.slug) } > { "read more..." } </a>
             </div>
         </div>
     }
