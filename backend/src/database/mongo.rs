@@ -195,9 +195,9 @@ impl PostDb for MongoDBHandler {
             } else {
                 1
             };
-            doc! {sort_by: sort_order}
+            doc! { sort_by: sort_order }
         } else {
-            doc! {}
+            doc! { "published_at": -1 }
         };
 
         if let Ok(cursor) = self
