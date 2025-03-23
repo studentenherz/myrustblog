@@ -154,7 +154,11 @@ pub async fn yew_post<T: DBHandler>(
         if let Some(post) = post {
             let (headers, html_string) = parse_markdown(&post.content, &highlighter);
             title = post.title.clone();
-            description = get_summary(&post.content, MAX_SUMMARY_SIZE);
+            if let Some(summary) = &post.summary {
+                description = summary[..std::cmp::min(MAX_SUMMARY_SIZE, summary.len())].to_string();
+            } else {
+                description = get_summary(&post.content, MAX_SUMMARY_SIZE);
+            }
             {
                 let slug = slug.clone();
                 content = ServerRenderer::<PostPage>::with_props(move || PostProps {
