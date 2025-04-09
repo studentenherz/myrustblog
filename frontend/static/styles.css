@@ -3,11 +3,11 @@
     --footer-top-margin: 50px;
     --footer-height: 200px;
     --max-with-central-content: 1630px;
-    --dark-bg-color: #292828;
-    --dark-code-bg-color: #333333;
-    --dark-fg-color: #d4be98;
-    --dark-fg-color-dim: #d4be9886;
-    --dark-secondary-fg-color: #a89984;
+    --dark-bg-color: #000000;
+    --dark-code-bg-color: #151515;
+    --dark-fg-color: #cecece;
+    --dark-fg-color-dim: #cecece85;
+    --dark-secondary-fg-color: #a0a0a0;
     --parenthesis-color: #ea6962;
     --link-color: #89b482;
     --spacing: 50px;
@@ -232,7 +232,9 @@ button,
     }
 }
 
-.post-card {
+a.post-card {
+    text-decoration: none;
+    color: inherit;
     display: flex;
     flex-direction: column;
     width: 100%;
