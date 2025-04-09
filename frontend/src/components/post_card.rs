@@ -16,13 +16,12 @@ pub fn post_card(Props { post }: &Props) -> Html {
     let summary = post.summary.as_deref().unwrap_or(&generated_summary);
 
     html! {
-        <div class="post-card" >
+        <a class="post-card" href={ format!("/post/{}", post.slug) } >
             <h2> { &post.title } </h2>
             <p class="preview"> { summary } </p>
             <div class="lower-strip">
                 <time datetime={post.published_at.to_rfc2822()}> { &post.published_at.format("%d %b %Y").to_string() } </time>
-                <a href={ format!("/post/{}", post.slug) } > { "read more..." } </a>
             </div>
-        </div>
+        </a>
     }
 }
