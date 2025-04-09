@@ -40,6 +40,7 @@ pub fn post_page(
                 </div>
             </div>
 
+
             <div class="post-container">
                 <div class="content-table">
                     <h2>{"Contents"}</h2>
@@ -51,6 +52,11 @@ pub fn post_page(
                         }) }
                     </ul>
                 </div>
+
+                <a href="/blog" class="back-button">
+                    <i class="icon-left icon"></i> { "Back" }
+                </a>
+
                 <div class="post">
                     { Html::from_html_unchecked((*post_content).clone().into()) }
                 </div>

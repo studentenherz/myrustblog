@@ -374,6 +374,13 @@ time {
         }
     }
 
+    .back-button {
+        grid-column: 2 / span 1;
+        position: sticky;
+        bottom: var(--spacing);
+        align-self: flex-end;
+    }
+
     .content-table {
         font-size: medium;
         grid-column: 10 / span 2;

@@ -1,9 +1,6 @@
 use yew::prelude::*;
 
-use crate::{
-    components::{Footer, Header},
-    utils::User,
-};
+use crate::{components::Footer, utils::User};
 
 #[derive(Properties, PartialEq, Default)]
 pub struct LayoutProps {
@@ -17,7 +14,7 @@ pub struct LayoutProps {
 pub fn layout(props: &LayoutProps) -> Html {
     html! {
         <div class="layout">
-            <Header user={ props.user.clone() } />
+            // <Header user={ props.user.clone() } />
 
             <main class="center-content">
                 { for props.children.iter() }

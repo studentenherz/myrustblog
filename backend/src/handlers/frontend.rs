@@ -9,7 +9,7 @@ use crate::{
     database::DBHandler,
     utils::{parse_markdown, Highlighter},
 };
-use frontend::{Blog, BlogProps, Home, Layout, LayoutProps, PostPage, PostProps, UsernameAndRole};
+use frontend::{Blog, BlogProps, Layout, LayoutProps, PostPage, PostProps, UsernameAndRole};
 
 const MAX_SUMMARY_SIZE: usize = 200;
 
@@ -59,30 +59,6 @@ async fn get_full_html<T: DBHandler>(
         )
         .replace("</body>", &format!("{}</body>", layout))
         .replace("</main>", &format!("{}</main>", content))
-}
-
-pub async fn yew_home<T: DBHandler>(
-    db_handler: web::Data<T>,
-    user: Option<Identity>,
-) -> impl Responder {
-    let content = ServerRenderer::<Home>::new()
-        .hydratable(false)
-        .render()
-        .await;
-
-    HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body(
-            get_full_html(
-                &content,
-                &user,
-                db_handler.as_ref(),
-                "Studentenherz's Blog",
-                "A blogging website made with Rust, using Yew and Actix Web.",
-                "",
-            )
-            .await,
-        )
 }
 
 pub async fn yew_blog<T: DBHandler>(

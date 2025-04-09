@@ -129,7 +129,7 @@ async fn main() -> std::io::Result<()> {
                     )
                     .service(web::resource("/highlight").post(handlers::highlight_code)),
             )
-            .service(web::resource("/").get(handlers::yew_home::<MongoDBHandler>))
+            .service(web::redirect("/", "/blog"))
             .service(web::resource("/blog").get(handlers::yew_blog::<MongoDBHandler>))
             .service(web::resource("/post/{slug}").get(handlers::yew_post::<MongoDBHandler>))
             .service(web::resource("/logout").get(handlers::logout_user))
