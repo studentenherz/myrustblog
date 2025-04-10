@@ -23,6 +23,7 @@ pub async fn create_post<T: DBHandler>(
                                 summary: post.summary.clone(),
                                 author: user_id,
                                 published_at: Utc::now(),
+                                public: post.public,
                             })
                             .await
                             .is_ok()
@@ -56,6 +57,7 @@ pub async fn update_post<T: DBHandler>(
                             &post.content,
                             &post.title,
                             post.summary.as_deref(),
+                            post.public,
                         )
                         .await
                         .is_ok()
@@ -122,8 +124,21 @@ pub async fn delete_post_and_redirect<T: DBHandler>(
 pub async fn get_post<T: DBHandler>(
     db_handler: web::Data<T>,
     slug: web::Path<String>,
+    user: Identity,
 ) -> impl Responder {
-    match db_handler.get_post(&slug).await {
+    let mut is_admin = false;
+    if let Ok(user_id) = user.id() {
+        if let Ok(db_result) = db_handler.find_user(&user_id).await {
+            match db_result {
+                Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                    is_admin = true;
+                }
+                _ => {}
+            }
+        }
+    }
+
+    match db_handler.get_post(&slug, is_admin).await {
         Ok(Some(post)) => HttpResponse::Ok().json(post),
         Ok(None) => HttpResponse::NotFound().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
@@ -133,8 +148,21 @@ pub async fn get_post<T: DBHandler>(
 pub async fn get_posts<T: DBHandler>(
     db_handler: web::Data<T>,
     query: web::Query<PostsQueryParams>,
+    user: Identity,
 ) -> impl Responder {
-    match db_handler.get_posts(&query).await {
+    let mut is_admin = false;
+    if let Ok(user_id) = user.id() {
+        if let Ok(db_result) = db_handler.find_user(&user_id).await {
+            match db_result {
+                Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                    is_admin = true;
+                }
+                _ => {}
+            }
+        }
+    }
+
+    match db_handler.get_posts(&query, is_admin).await {
         Ok(posts) => HttpResponse::Ok().json(GetPostsResponse {
             posts,
             pages: db_handler

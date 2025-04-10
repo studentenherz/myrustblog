@@ -1,6 +1,6 @@
 use pulldown_cmark::{html::push_html, Options, Parser};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlTextAreaElement;
+use web_sys::{HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
 use yew_router::history::History;
 
@@ -21,6 +21,7 @@ fn edit_page(props: &Props) -> Html {
     let title = use_state(String::new);
     let content = use_state(String::new);
     let summary = use_state(String::new);
+    let public = use_state(|| false);
     let preview = use_state(|| false);
     let slug = props.slug.clone();
 
@@ -28,21 +29,25 @@ fn edit_page(props: &Props) -> Html {
         let title = title.clone();
         let content = content.clone();
         let summary = summary.clone();
+        let public = public.clone();
         let slug = slug.clone();
 
         use_effect_with(slug, move |slug| {
             let title = title.clone();
             let content = content.clone();
             let summary = summary.clone();
+            let public = public.clone();
 
             if let Some(slug) = slug.clone() {
                 spawn_local(async move {
                     match ApiService::get_post(&slug).await {
                         Ok(Some(post)) => {
+                            log::info!("{:?}", post);
                             set_title(&format!("Edit | {}", &post.title));
                             title.set(post.title);
                             content.set(post.content);
                             summary.set(post.summary.unwrap_or_default());
+                            public.set(post.public);
                         }
                         Ok(None) => yew_router::history::BrowserHistory::new().replace("/404"),
                         Err(_) => {
@@ -88,6 +93,18 @@ fn edit_page(props: &Props) -> Html {
             if let Some(input) = e.target_dyn_into::<HtmlTextAreaElement>() {
                 let summary_value = input.value();
                 summary.set(summary_value);
+            }
+        })
+    };
+
+    let on_public_change = {
+        let public = public.clone();
+        Callback::from(move |e: Event| {
+            log::info!("{:?}", e);
+
+            if let Some(input) = e.target_dyn_into::<HtmlInputElement>() {
+                let public_value = input.checked();
+                public.set(public_value);
             }
         })
     };
@@ -151,12 +168,14 @@ fn edit_page(props: &Props) -> Html {
         let title = title.clone();
         let content = content.clone();
         let summary = summary.clone();
+        let public = public.clone();
         let slug = props.slug.clone();
 
         Callback::from(move |_| {
             let title = title.clone();
             let content = content.clone();
             let summary = summary.clone();
+            let public = public.clone();
             let api_error_cb = Callback::from(|err: ApiError| log::error!("{:?}", err));
             let slug = slug.clone();
 
@@ -171,6 +190,7 @@ fn edit_page(props: &Props) -> Html {
                         } else {
                             None
                         },
+                        *public,
                     )
                     .await
                 } else {
@@ -182,6 +202,7 @@ fn edit_page(props: &Props) -> Html {
                         } else {
                             None
                         },
+                        *public,
                     )
                     .await
                 } {
@@ -235,6 +256,9 @@ fn edit_page(props: &Props) -> Html {
                     </div>
                 } else {
                     <div class="md-editor">
+                        <label for="public"> { "Public" } </label>
+                        <input type="checkbox" name="public" onchange={on_public_change} checked={*public}/>
+
                         <textarea placeholder={"Write here the summary..." }
                         rows={5}
                         value={(*summary).clone()}

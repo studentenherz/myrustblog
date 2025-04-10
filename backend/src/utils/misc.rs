@@ -17,7 +17,7 @@ pub async fn generate_unique_slug(db_handler: &impl DBHandler, title: &str) -> R
     let mut counter = 1;
 
     loop {
-        match db_handler.get_post(&slug).await {
+        match db_handler.get_post(&slug, true).await {
             Ok(Some(_)) => {
                 slug = format!("{}-{}", title_to_slug(title), counter);
                 counter += 1;

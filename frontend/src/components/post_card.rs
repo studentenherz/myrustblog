@@ -16,7 +16,7 @@ pub fn post_card(Props { post }: &Props) -> Html {
     let summary = post.summary.as_deref().unwrap_or(&generated_summary);
 
     html! {
-        <a class="post-card" href={ format!("/post/{}", post.slug) } >
+        <a class={ format!("post-card{}", if post.public { "" } else { " non-public" } ) } href={ format!("/post/{}", post.slug) } >
             <h2> { &post.title } </h2>
             <p class="preview"> { summary } </p>
             <div class="lower-strip">

@@ -18,6 +18,8 @@ pub struct PostModel {
     pub author: String,
     #[serde(with = "chrono_datetime_as_bson_datetime")]
     pub published_at: DateTime<Utc>,
+    #[serde(default)]
+    pub public: bool,
 }
 
 impl From<PostModel> for common::Post {
@@ -29,6 +31,7 @@ impl From<PostModel> for common::Post {
             summary: value.summary,
             author: value.author,
             published_at: value.published_at,
+            public: value.public,
         }
     }
 }
@@ -43,6 +46,7 @@ impl From<common::Post> for PostModel {
             summary: value.summary,
             author: value.author,
             published_at: value.published_at,
+            public: value.public,
         }
     }
 }

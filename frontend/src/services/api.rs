@@ -23,6 +23,7 @@ impl ApiService {
         title: &str,
         content: &str,
         summary: Option<&str>,
+        public: bool,
     ) -> Result<String, ApiError> {
         if let Ok(builder) = AuthService::protected_post(&api_url!("/post/create")) {
             if let Ok(response) = builder
@@ -30,6 +31,7 @@ impl ApiService {
                     title: String::from(title),
                     content: String::from(content),
                     summary: summary.map(String::from),
+                    public,
                 })
                 .unwrap()
                 .send()
@@ -66,6 +68,7 @@ impl ApiService {
         content: &str,
         title: &str,
         summary: Option<&str>,
+        public: bool,
     ) -> Result<String, ApiError> {
         if let Ok(builder) = AuthService::protected_post(&api_url!("/post/update")) {
             if let Ok(response) = builder
@@ -74,6 +77,7 @@ impl ApiService {
                     content: String::from(content),
                     title: String::from(title),
                     summary: summary.map(String::from),
+                    public,
                 })
                 .unwrap()
                 .send()

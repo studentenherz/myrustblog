@@ -154,12 +154,13 @@ impl PostDb for MongoDBHandler {
         updated_content: &str,
         updated_title: &str,
         updated_summary: Option<&str>,
+        updated_public: bool,
     ) -> Result<u64, ()> {
         match self
             .post_collection
             .update_one(
                 doc! {"slug": slug},
-                doc! {"$set": doc! {"content": updated_content, "title": updated_title, "summary": updated_summary}},
+                doc! {"$set": doc! {"content": updated_content, "title": updated_title, "summary": updated_summary, "public": updated_public}},
             )
             .await
         {
@@ -175,15 +176,21 @@ impl PostDb for MongoDBHandler {
         }
     }
 
-    async fn get_post(&self, slug: &str) -> Result<Option<Post>, ()> {
-        match self.post_collection.find_one(doc! {"slug": slug}).await {
+    async fn get_post(&self, slug: &str, is_admin: bool) -> Result<Option<Post>, ()> {
+        let filter = if is_admin {
+            doc! {"slug": slug}
+        } else {
+            doc! {"slug": slug, "public": true}
+        };
+
+        match self.post_collection.find_one(filter).await {
             Ok(Some(post)) => Ok(Some(post.into())),
             Ok(None) => Ok(None),
             Err(_) => Err(()),
         }
     }
 
-    async fn get_posts(&self, query: &PostsQueryParams) -> Result<Vec<Post>, ()> {
+    async fn get_posts(&self, query: &PostsQueryParams, is_admin: bool) -> Result<Vec<Post>, ()> {
         let page = query.page.unwrap_or(1);
         let per_page = query.per_page.unwrap_or(10);
         let limit = per_page as i64;
@@ -200,9 +207,15 @@ impl PostDb for MongoDBHandler {
             doc! { "published_at": -1 }
         };
 
+        let filter = if is_admin {
+            doc! {}
+        } else {
+            doc! { "public": true }
+        };
+
         if let Ok(cursor) = self
             .post_collection
-            .find(doc! {})
+            .find(filter)
             .limit(limit)
             .skip(offset)
             .sort(sort_option)

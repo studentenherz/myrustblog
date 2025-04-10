@@ -70,7 +70,21 @@ pub async fn yew_blog<T: DBHandler>(
     let title = "Studentenherz's Blog";
     let description = "A blogging website made with Rust, using Yew and Actix Web.";
 
-    if let Ok(posts) = db_handler.get_posts(&query).await {
+    let mut is_admin = false;
+    if let Some(ref iden) = user {
+        if let Ok(user_id) = iden.id() {
+            if let Ok(db_result) = db_handler.find_user(&user_id).await {
+                match db_result {
+                    Some(db_user) if db_user.role == "Admin" || db_user.role == "Editor" => {
+                        is_admin = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    if let Ok(posts) = db_handler.get_posts(&query, is_admin).await {
         println!("Posts: {:?}", posts);
         let posts: Vec<Arc<Post>> = posts.into_iter().map(Arc::new).collect();
         if let Ok(pages) = db_handler
@@ -114,10 +128,14 @@ pub async fn yew_post<T: DBHandler>(
     let mut description =
         String::from("A blogging website made with Rust, using Yew and Actix Web.");
 
+    let mut is_admin = false;
     let mut user = None;
     if let Some(iden) = &user_iden {
         if let Ok(username) = iden.id() {
             if let Ok(Some(full_user)) = db_handler.find_user(&username).await {
+                if full_user.role == "Admin" || full_user.role == "Editor" {
+                    is_admin = true;
+                }
                 user = Some(UsernameAndRole {
                     username: full_user.username,
                     role: full_user.role,
@@ -126,7 +144,7 @@ pub async fn yew_post<T: DBHandler>(
         }
     }
 
-    if let Ok(post) = db_handler.get_post(&slug).await {
+    if let Ok(post) = db_handler.get_post(&slug, is_admin).await {
         if let Some(post) = post {
             let (headers, html_string) = parse_markdown(&post.content, &highlighter);
             title = post.title.clone();

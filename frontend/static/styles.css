@@ -265,6 +265,10 @@ a.post-card {
     &:hover {
         border-color: var(--parenthesis-color);
     }
+
+    &.non-public {
+        opacity: 0.3;
+    }
 }
 
 time {

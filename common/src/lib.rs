@@ -9,6 +9,7 @@ pub struct CreatePostRequest {
     pub title: String,
     pub content: String,
     pub summary: Option<String>,
+    pub public: bool,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -22,6 +23,7 @@ pub struct UpdatePostRequest {
     pub content: String,
     pub title: String,
     pub summary: Option<String>,
+    pub public: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone)]
@@ -32,6 +34,7 @@ pub struct Post {
     pub summary: Option<String>,
     pub author: String,
     pub published_at: DateTime<Utc>,
+    pub public: bool,
 }
 
 #[derive(Deserialize, Serialize)]

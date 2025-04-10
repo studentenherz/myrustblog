@@ -9,12 +9,15 @@ async fn generate_rss<T: DBHandler>(
     per_page: u64,
 ) -> impl Responder {
     if let Ok(latest_posts) = db_handler
-        .get_posts(&PostsQueryParams {
-            page: Some(1),
-            per_page: Some(per_page),
-            sort_by: Some("published_at".to_string()),
-            sort_order: Some("desc".to_string()),
-        })
+        .get_posts(
+            &PostsQueryParams {
+                page: Some(1),
+                per_page: Some(per_page),
+                sort_by: Some("published_at".to_string()),
+                sort_order: Some("desc".to_string()),
+            },
+            false,
+        )
         .await
     {
         let feed = create_rss_feed(&latest_posts, &config);
