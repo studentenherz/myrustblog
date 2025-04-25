@@ -3,8 +3,13 @@ FROM rust:latest AS base
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo install trunk wasm-bindgen-cli
 
-FROM base AS build
+FROM base AS debug
+WORKDIR /usr/src/myrustblog
+COPY . .
 
+RUN echo "=== GIT STATUS ===" && git status && git diff || true
+
+FROM base AS build
 WORKDIR /usr/src/myrustblog
 COPY . .
 
