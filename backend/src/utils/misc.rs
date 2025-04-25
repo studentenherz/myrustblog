@@ -1,3 +1,4 @@
+use actix_web::{http::header, HttpRequest};
 use rand::{distr::Alphanumeric, Rng};
 
 use crate::database::DBHandler;
@@ -28,4 +29,14 @@ pub async fn generate_unique_slug(db_handler: &impl DBHandler, title: &str) -> R
             Err(_) => return Err(()),
         }
     }
+}
+
+pub fn get_host_or<'a>(request: &'a HttpRequest, default: &'a str) -> &'a str {
+    if let Some(header) = request.headers().get(header::HOST) {
+        if let Ok(value) = header.to_str() {
+            return value;
+        }
+    }
+
+    return default;
 }

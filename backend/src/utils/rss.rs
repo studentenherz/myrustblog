@@ -5,7 +5,7 @@ use common::{utils::get_summary, Post};
 
 const MAX_SUMMARY_SIZE: usize = 200;
 
-pub fn create_rss_feed(latest_posts: &[Post], config: &Config) -> Channel {
+pub fn create_rss_feed(latest_posts: &[Post], config: &Config, base_url: &str) -> Channel {
     let items: Vec<Item> = latest_posts
         .iter()
         .map(|post| {
@@ -13,7 +13,7 @@ pub fn create_rss_feed(latest_posts: &[Post], config: &Config) -> Channel {
                 .title(post.title.clone())
                 .author(post.author.clone())
                 .description(get_summary(&post.content, MAX_SUMMARY_SIZE))
-                .link(format!("{}/post/{}", config.WEBSITE_URL, &post.slug))
+                .link(format!("{}/post/{}", base_url, &post.slug))
                 .pub_date(post.published_at.clone().to_rfc2822())
                 .build()
         })
@@ -21,7 +21,7 @@ pub fn create_rss_feed(latest_posts: &[Post], config: &Config) -> Channel {
 
     ChannelBuilder::default()
         .title(config.RSS_TITLE.clone())
-        .link(config.WEBSITE_URL.clone())
+        .link(base_url)
         .description(config.RSS_DESCRIPTION.clone())
         .items(items)
         .build()
