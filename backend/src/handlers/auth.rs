@@ -124,12 +124,12 @@ pub async fn login_user<T: DBHandler>(
     }
 }
 
-pub async fn logout_user(user: Option<Identity>, config: web::Data<Config>) -> impl Responder {
+pub async fn logout_user(user: Option<Identity>) -> impl Responder {
     if let Some(user) = user {
         user.logout();
     }
 
     HttpResponse::Found()
-        .append_header(("location", &*config.WEBSITE_URL))
+        .append_header(("location", "/"))
         .finish()
 }
