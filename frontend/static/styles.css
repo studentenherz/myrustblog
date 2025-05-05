@@ -245,7 +245,7 @@ a.post-card {
 
     .preview {
         padding-left: 10px;
-        opacity: 0.5;
+        opacity: 0.7;
         flex-grow: 1;
 
         &::before {
@@ -254,7 +254,6 @@ a.post-card {
     }
 
     .lower-strip {
-
         margin-top: 20px;
         width: 100%;
         display: flex;
@@ -820,5 +819,21 @@ blockquote {
     >:first-child:not(pre) {
         padding-top: 0;
         margin-top: 0;
+    }
+}
+
+.avatar-img {
+    filter: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="background_color_filter" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%"><feColorMatrix type="matrix" values="0.1921568627450979 -0.8078431372549014 -0.19215686274509725 0.403921568627451 0.40392156862745066 -0.8078431372549025 0.19215686274509777 -0.19215686274509788 0.40392156862745165 0.40392156862745077 -0.8078431372549022 -0.8078431372549025 0.8078431372549032 0.4039215686274507 0.4039215686274507 -3.0531133177191805e-16 -6.106226635438361e-16 1.1149684139318158e-15 0.5000000000000004 0.5000000000000004"/></filter></defs></svg>#background_color_filter');
+}
+
+.blog-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 50px;
+
+    .avatar-img {
+        max-width: 280px;
     }
 }
