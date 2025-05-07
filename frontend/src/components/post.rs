@@ -33,7 +33,6 @@ pub fn post_page(
             <div class="post-title">
                 <h1>{ &post.title }</h1>
                 <div class="details">
-                    <p>{ &post.author }</p>
                     <time datetime={post.published_at.to_rfc2822()}>
                         { post.published_at.format("%d %b %Y").to_string() }
                     </time>
