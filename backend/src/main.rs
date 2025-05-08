@@ -31,7 +31,9 @@ create_env_struct! {
         WEBSITE_URL,
         RSS_TITLE,
         RSS_DESCRIPTION,
-        REDIS_URL
+        REDIS_URL,
+        FILE_UPLOAD_PATH,
+        FILE_UPLOAD_URL
     }
 }
 
@@ -127,6 +129,7 @@ async fn main() -> std::io::Result<()> {
                                     .delete(handlers::delete_post::<MongoDBHandler>),
                             ),
                     )
+                    .service(web::resource("/upload").post(handlers::upload))
                     .service(web::resource("/highlight").post(handlers::highlight_code)),
             )
             .service(web::redirect("/", "/blog"))
@@ -138,6 +141,10 @@ async fn main() -> std::io::Result<()> {
                     .get(handlers::delete_post_and_redirect::<MongoDBHandler>),
             )
             .service(web::resource("/robots.txt").get(handlers::robots))
+            .service(actix_files::Files::new(
+                &config.FILE_UPLOAD_URL,
+                &config.FILE_UPLOAD_PATH,
+            ))
             .service(
                 spa()
                     .index_file("./dist/index.html")

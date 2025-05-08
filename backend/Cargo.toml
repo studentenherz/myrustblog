@@ -32,3 +32,4 @@ pulldown-cmark = { version = "0.13", default-features = false, features = [
     "html",
 ] }
 katex = "0.4"
+actix-multipart = { version = "0.7.2", features = ["tempfile"] }
