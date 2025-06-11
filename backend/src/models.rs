@@ -109,4 +109,6 @@ impl From<UnconfirmedUser> for User {
 pub struct TempFileModel {
     pub filename: String,
     pub path: String,
+    #[serde(with = "chrono_datetime_as_bson_datetime")]
+    pub created_at: DateTime<Utc>,
 }

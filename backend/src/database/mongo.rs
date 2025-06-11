@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::path::Path;
 
+use chrono::Utc;
 use futures_util::TryStreamExt;
 use mongodb::{
     bson::doc,
@@ -45,6 +46,15 @@ impl MongoDBHandler {
             .build();
 
         unconfirmed_user_collection
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! {"created_at": 1})
+                    .options(options.clone())
+                    .build(),
+            )
+            .await?;
+
+        temp_file_collection
             .create_index(
                 IndexModel::builder()
                     .keys(doc! {"created_at": 1})
@@ -253,6 +263,7 @@ impl PostDb for MongoDBHandler {
                 .insert_one(TempFileModel {
                     path: String::from(path_str),
                     filename: String::from(filename),
+                    created_at: Utc::now(),
                 })
                 .await
             {
