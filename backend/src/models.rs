@@ -104,3 +104,9 @@ impl From<UnconfirmedUser> for User {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TempFileModel {
+    pub filename: String,
+    pub path: String,
+}

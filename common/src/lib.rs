@@ -63,3 +63,9 @@ pub struct Header {
     pub text: String,
     pub id: String,
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UploadResponse {
+    pub parent_path: String,
+    pub filename: String,
+}

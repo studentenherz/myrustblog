@@ -1,11 +1,10 @@
-use std::fs;
-use std::path::Path;
-
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 use actix_web::{web, HttpResponse, Responder};
 use bson::uuid::Uuid;
-use serde_json::json;
 
+use common::UploadResponse;
+
+use crate::database::DBHandler;
 use crate::Config;
 
 #[derive(MultipartForm, Debug)]
@@ -14,27 +13,26 @@ pub struct UploadForm {
     file: TempFile,
 }
 
-pub async fn upload(
+pub async fn upload<T: DBHandler>(
     MultipartForm(form): MultipartForm<UploadForm>,
     config: web::Data<Config>,
+    db_handler: web::Data<T>,
 ) -> impl Responder {
     let file = form.file;
-    let name = file.file_name.unwrap_or_else(|| {
-        let uuid = Uuid::new();
-        format!("file-{}.tmp", uuid)
-    });
-    let file_path = Path::new(&config.FILE_UPLOAD_PATH).join(&name);
+    let filename = format!(
+        "{}{}",
+        Uuid::new(),
+        file.file_name.unwrap_or(String::from(".tmp"))
+    );
 
-    match fs::copy(&file.file.path(), &file_path) {
-        Ok(_) => HttpResponse::Ok().json(json!({
-            "url": Path::new(&config.FILE_UPLOAD_URL)
-                .join(&name)
-                .to_str()
-                .unwrap_or(""),
-        })),
-        Err(err) => {
-            println!("Failed to persist file: {:?}", err);
-            return HttpResponse::InternalServerError().finish();
+    if let Ok((_, path)) = file.file.keep() {
+        if db_handler.create_temp_file(&path, &filename).await.is_ok() {
+            return HttpResponse::Ok().json(UploadResponse {
+                parent_path: config.FILE_UPLOAD_URL.clone(),
+                filename,
+            });
         }
-    }
+    };
+
+    HttpResponse::BadRequest().finish()
 }

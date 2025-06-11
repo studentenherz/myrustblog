@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::path::Path;
 
 use futures_util::TryStreamExt;
 use mongodb::{
@@ -12,7 +13,7 @@ use super::{
     user::{UnconfirmedUserDb, UserDb},
     DBHandler,
 };
-use crate::models::{PostModel, PostsQueryParams, UnconfirmedUser, User};
+use crate::models::{PostModel, PostsQueryParams, TempFileModel, UnconfirmedUser, User};
 use common::Post;
 
 #[derive(Clone)]
@@ -20,6 +21,7 @@ pub struct MongoDBHandler {
     user_collection: mongodb::Collection<User>,
     unconfirmed_user_collection: mongodb::Collection<UnconfirmedUser>,
     post_collection: mongodb::Collection<PostModel>,
+    temp_file_collection: mongodb::Collection<TempFileModel>,
 }
 
 impl MongoDBHandler {
@@ -36,6 +38,7 @@ impl MongoDBHandler {
         let unconfirmed_user_collection =
             db_client.collection::<UnconfirmedUser>("unconfirmed_users");
         let post_collection = db_client.collection::<PostModel>("posts");
+        let temp_file_collection = db_client.collection::<TempFileModel>("temp_files");
 
         let options = IndexOptions::builder()
             .expire_after(std::time::Duration::from_secs(24 * 60 * 60))
@@ -54,6 +57,7 @@ impl MongoDBHandler {
             user_collection,
             unconfirmed_user_collection,
             post_collection,
+            temp_file_collection,
         })
     }
 }
@@ -239,6 +243,24 @@ impl PostDb for MongoDBHandler {
             let total_pages = (total_posts as f64 / per_page as f64).ceil() as u64;
             return Ok(total_pages);
         }
+        Err(())
+    }
+
+    async fn create_temp_file(&self, path: &Path, filename: &str) -> Result<(), ()> {
+        if let Some(path_str) = path.to_str() {
+            return match self
+                .temp_file_collection
+                .insert_one(TempFileModel {
+                    path: String::from(path_str),
+                    filename: String::from(filename),
+                })
+                .await
+            {
+                Ok(_) => Ok(()),
+                Err(_) => Err(()),
+            };
+        };
+
         Err(())
     }
 }

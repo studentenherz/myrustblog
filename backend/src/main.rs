@@ -129,7 +129,7 @@ async fn main() -> std::io::Result<()> {
                                     .delete(handlers::delete_post::<MongoDBHandler>),
                             ),
                     )
-                    .service(web::resource("/upload").post(handlers::upload))
+                    .service(web::resource("/upload").post(handlers::upload::<MongoDBHandler>))
                     .service(web::resource("/highlight").post(handlers::highlight_code)),
             )
             .service(web::redirect("/", "/blog"))
