@@ -17,7 +17,7 @@ pub fn post_card(Props { post }: &Props) -> Html {
 
     html! {
         <a class={ format!("post-card{}", if post.public { "" } else { " non-public" } ) } href={ format!("/post/{}", post.slug) } >
-            <h2> { &post.title } </h2>
+            <h2 style={ format!("view-transition-name: {}", post.slug) }> { &post.title } </h2>
             <p class="preview"> { summary } </p>
             <div class="lower-strip">
                 <time datetime={post.published_at.to_rfc2822()}> { &post.published_at.format("%d %b %Y").to_string() } </time>

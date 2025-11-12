@@ -31,7 +31,7 @@ pub fn post_page(
     html! {
         <>
             <div class="post-title">
-                <h1>{ &post.title }</h1>
+                <h1 style={ format!("view-transition-name: {}", post.slug) }>{ &post.title }</h1>
                 <div class="details">
                     <time datetime={post.published_at.to_rfc2822()}>
                         { post.published_at.format("%d %b %Y").to_string() }

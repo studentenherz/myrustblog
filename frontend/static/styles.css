@@ -22,6 +22,14 @@
     box-sizing: border-box;
 }
 
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(root) {
+    animation: none;
+}
+
 html {
     scroll-behavior: smooth;
 }
@@ -274,8 +282,6 @@ a.post-card {
 
     &:hover {
         border-color: var(--parenthesis-color);
-        margin-left: 1rem;
-        transition: all 0.1s linear;
     }
 
     &.non-public {
