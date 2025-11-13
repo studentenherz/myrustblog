@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 actix-cors = "0.7"
-actix-identity = "0.8"
-actix-session = { version = "0.10", features = ["redis-session-native-tls"] }
+actix-identity = "0.9"
+actix-session = { version = "0.11", features = ["redis-session-rustls"] }
 actix-web = "4.10"
 actix-web-lab = { version = "0.24", features = ["spa"] }
 bcrypt = "0.17"
@@ -18,7 +18,9 @@ common = { path = "../common" }
 frontend = { path = "../frontend" }
 dotenv = "0.15"
 futures-util = "0.3"
-lettre = { version = "0.11", features = ["tokio1", "tokio1-native-tls"] }
+lettre = { version = "0.11", default-features = false, features = [
+    "builder", "hostname", "smtp-transport", "pool", "tokio1", "tokio1-rustls", "ring", "webpki-roots"
+] }
 mongodb = "3.2"
 pretty_env_logger = "0.5"
 rand = "0.9"
