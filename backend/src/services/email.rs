@@ -37,7 +37,10 @@ impl Emailer {
     pub async fn test_connection(&self) -> Result<(), SmtpConnectionError> {
         match self.smtp_client.test_connection().await {
             Ok(true) => Ok(()),
-            _ => Err(SmtpConnectionError {}),
+            something => {
+                println!("{:?}", something);
+                Err(SmtpConnectionError {})
+            }
         }
     }
 

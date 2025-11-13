@@ -55,10 +55,12 @@ async fn main() -> std::io::Result<()> {
     )
     .expect("Error loading env variables");
 
-    emailer
-        .test_connection()
-        .await
-        .expect("Connection test with SMTP server failed");
+    if std::env::var("TEST_SMTP_CONNECTION").is_ok() {
+        emailer
+            .test_connection()
+            .await
+            .expect("Connection test with SMTP server failed");
+    }
 
     let highlighter = Highlighter::new();
 
