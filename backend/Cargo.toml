@@ -33,3 +33,4 @@ pulldown-cmark = { version = "0.13", default-features = false, features = [
 ] }
 katex = "0.4"
 actix-multipart = { version = "0.7.2", features = ["tempfile"] }
+openssl-sys = { version = "0.9.111", features = ["vendored"] }
